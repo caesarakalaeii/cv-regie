@@ -1,0 +1,10 @@
+
+Human detection and tracking using YOLOv4/5: https://towardsdatascience.com/picking-fast-people-detector-working-with-opencv-on-cpu-in-2021-ff8d752088af
+
+to circumvent webcam exclusivity two modes seem promising:
+1. split incoming webcam feed into two, one for OBS, one for cv (lower res?) --> cropping via OBS Websocket
+2. export already cropped feed to OBS, (lower res for detection still possible?)
+
+OBS websocket docs: 
+- async: https://github.com/IRLToolkit/simpleobsws/tree/master 
+- no async: https://pypi.org/project/obsws-python/
