@@ -1,0 +1,28 @@
+
+]python:S1131"@Remove the useless trailing whitespaces at the end of this line.(µáÎüÿÿÿÿ
+]python:S1131"@Remove the useless trailing whitespaces at the end of this line.(µáÎüÿÿÿÿ
+]python:S1131"@Remove the useless trailing whitespaces at the end of this line.(µáÎüÿÿÿÿ
+]python:S1131"@Remove the useless trailing whitespaces at the end of this line.(µáÎüÿÿÿÿ
+]python:S1131&"@Remove the useless trailing whitespaces at the end of this line.(µáÎüÿÿÿÿ
+]python:S1131+"@Remove the useless trailing whitespaces at the end of this line.(µáÎüÿÿÿÿ
+]python:S1131-"@Remove the useless trailing whitespaces at the end of this line.(µáÎüÿÿÿÿ
+]python:S11314"@Remove the useless trailing whitespaces at the end of this line.(µáÎüÿÿÿÿ
+]python:S11316"@Remove the useless trailing whitespaces at the end of this line.(µáÎüÿÿÿÿ
+]python:S11319"@Remove the useless trailing whitespaces at the end of this line.(µáÎüÿÿÿÿ
+]python:S1131<"@Remove the useless trailing whitespaces at the end of this line.(µáÎüÿÿÿÿ
+]python:S1131@"@Remove the useless trailing whitespaces at the end of this line.(µáÎüÿÿÿÿ
+]python:S1131A"@Remove the useless trailing whitespaces at the end of this line.(µáÎüÿÿÿÿ
+qpython:S1578"aRename this module to match this regular expression: "(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$".
+;python:S1720"Add a docstring to this class.(…åüüÿÿÿÿ
+Ypython:S1722"<Add inheritance from "object" or some other new-style class.(…åüüÿÿÿÿ
+ƒpython:S101"gRename class "Camera_Widget" to match the regular expression ^_?([A-Z_][a-zA-Z0-9]*|[a-z_][a-z0-9_]*)$.(…åüüÿÿÿÿ
+Hpython:S6540"+Add a type hint to this function parameter.(“¬æŠûÿÿÿÿ
+Hpython:S6540"+Add a type hint to this function parameter.(“¬æŠûÿÿÿÿ
+Hpython:S6540"+Add a type hint to this function parameter.(“¬æŠûÿÿÿÿ
+Vpython:S6538"9Annotate the return type of this constructor with `None`.(“¬æŠûÿÿÿÿ
+Hpython:S6540"+Add a type hint to this function parameter.(ÁßÖ´ÿÿÿÿÿ
+Qpython:S6538"4Add a return type hint to this function declaration.(ÁßÖ´ÿÿÿÿÿ
+Qpython:S6538"4Add a return type hint to this function declaration.(ùÇÄÍúÿÿÿÿ
+Lpython:S6538"4Add a return type hint to this function declaration.(¯Œåò
+Qpython:S6538'"4Add a return type hint to this function declaration.(±Ò³üÿÿÿÿ
+Qpython:S6538,"4Add a return type hint to this function declaration.(¼ùŠöûÿÿÿÿ
