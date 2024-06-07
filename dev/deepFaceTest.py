@@ -10,7 +10,7 @@ import numpy as np
 from tensorflow import keras
 from deepface import DeepFace
 
-port = 1
+port = 5
 resolution = [720, 1280]
 camera_fps = 30
 
@@ -19,7 +19,7 @@ cap.set(cv.CAP_PROP_FRAME_WIDTH, resolution[1])
 cap.set(cv.CAP_PROP_FRAME_HEIGHT, resolution[0])
 cap.set(cv.CAP_PROP_FPS, camera_fps)
 
-#DeepFace.stream(db_path = "Z:/scripts/cv-regie/dev/database")
+#DeepFace.stream(db_path = "./database")
 
 # objs = DeepFace.analyze(
 #   img_path = "Z:/scripts/cv-regie/dev/database/Kilian/Kilian5.jpg", 
@@ -32,18 +32,19 @@ cap.set(cv.CAP_PROP_FPS, camera_fps)
 # )
 
 while True:
-    
+
     grabbed, frame = cap.read()
     if grabbed:
 
         dfs = DeepFace.find(
           img_path = np.array(frame),
-          db_path = "Z:/scripts/cv-regie/dev/database",
-          enforce_detection=False
+          db_path = "./database",
+          enforce_detection=False,
+          silent=True
         )
+        if not dfs[0].empty:
+            print(dfs[0]["identity"][0])
 
-        print(dfs[0]["identity"][0])
-        
         cv.imshow("Frame", frame)
 
     if cv.waitKey(1) == ord("q"):
