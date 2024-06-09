@@ -23,7 +23,7 @@ class ProcessedFrame(object):
             return True
         return False
     
-    def find_person_by_id(self, id:int) -> Person | None:
+    def find_person_by_id(self, id:int):
         for person in self.persons:
             if person.track_id == id:
                 return person
