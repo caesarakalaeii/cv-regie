@@ -27,7 +27,7 @@ class ProcessedFrame(object):
     
     def remove_person(self, person:Person) -> bool:
         if person in self.persons:
-            self.persons.remove()
+            self.persons.remove(person)
             return True
         return False
     
