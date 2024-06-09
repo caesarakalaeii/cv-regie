@@ -11,6 +11,14 @@ class ProcessedFrame(object):
     __frame_count:int
     __target_box:Box
     
+    def __init__(self) -> None:
+        self.persons = []
+        self.frame = None
+        self.last_box = None
+        self.__frame_count = 0
+        self.__target_box = None
+        pass
+    
     def add_person(self, person:Person) -> bool:
         if person in self.persons:
             return False
