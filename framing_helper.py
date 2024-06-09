@@ -91,7 +91,7 @@ class ProcessedFrame(object):
         '''
         call after updates and box calculations, will return new frame
         '''
-        return self.frame[self.last_box.x1:self.last_box.x2, self.last_box.y1:self.last_box.y2]  
+        return self.frame[self.last_box.y1:self.last_box.y2,self.last_box.x1:self.last_box.x2]  
         
                 
         
