@@ -34,10 +34,14 @@ yolo = YOLO("./models/detect/yolov8n.pt")
 
 linked_faces: [LinkedFace] = []
 identities = {}
+unknowns = {}
+
+
 with os.scandir("./dev/database") as it:
     for entry in it:
         if not entry.name.startswith(".") and entry.is_dir():
             identities[entry.name] = []
+            linked_faces.append(LinkedFace(entry.name))
 
 print(f"Found {len(identities)} identities: {identities}")
 
@@ -59,10 +63,14 @@ while any(cap.isOpened() for cap in caps):
             human_frame = result[0].plot()
             tracked = []
             for res in result:
-                person = Person.from_json_string(res.tojson(), frame, feed_id)
-                if person is None:
-                    continue
-                tracked.append(person)
+                for r in res:
+                    print(r.tojson())
+
+                    person = Person.from_json_string(r.tojson(), frame, feed_id)
+                    if person is None:
+                        continue
+                    tracked.append(person)
+            print(f"Found {len(tracked)} persons: {tracked}")
 
             if len(tracked) == 0:
                 continue
@@ -72,16 +80,32 @@ while any(cap.isOpened() for cap in caps):
                 found_face = False
                 for face in linked_faces:
                     face: LinkedFace
+                    if face.check_if_known_face(feed_id, person.track_id):
+                        print(f"Found {person.track_id}, no df needed")
+                        found_face = True
+                    if (feed_id, person.track_id) in unknowns.keys():
+                        if unknowns[(feed_id, person.track_id)] > 10:
+                            print(
+                                f"Person {person.track_id} is probably unknown will skip"
+                            )
+                            found_face = True  # Say we found a face after we unsuccessfully tried 10 times
+                if found_face:
+                    continue
+                print(f"Did not find {person.track_id}, df needed")
+
+                for face in linked_faces:
                     found_face = face.register_person(person)
                     if found_face:
                         print(
                             f"Person with ID {person.track_id} on feed {feed_id} is linked, identity is {face.faceId}"
                         )
-                if not found_face:
-                    print(
-                        f"Person with ID {person.track_id} on feed {feed_id} is not linked, creating a new link"
-                    )
-                    linked_faces.append(LinkedFace(person))
+                        continue
+                    if (feed_id, person.track_id) in unknowns.keys():
+                        unknowns[(feed_id, person.track_id)] = (
+                            unknowns[(feed_id, person.track_id)] + 1
+                        )
+                    else:
+                        unknowns[(feed_id, person.track_id)] = 1
 
             cv.imshow("Example", human_frame)
 

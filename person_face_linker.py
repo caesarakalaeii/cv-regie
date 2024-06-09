@@ -4,6 +4,10 @@ import json
 from deepface import DeepFace
 
 
+def identity_from_string(string: str):
+    return string.split("database/")[1].split("/")[0]
+
+
 class Box:
     x1: int
     y1: int
@@ -78,30 +82,44 @@ class LinkedFace(object):
 
     faceId: int or None
 
-    def __init__(self, person: Person):
+    def __init__(self, identity: str = None):
         self.personIds = {}
-        self.faceId = None
-        self.register_person(person)
+        self.faceId = identity
+
+    def check_if_known_face(self, feed_id: int, personId: int) -> bool:
+        if feed_id not in self.personIds.keys():
+            return False
+        return personId == self.personIds[feed_id]
 
     def register_person(self, person: Person):
-        if person.feed_id in self.personIds:
+        print(f"Registering person {person.track_id}")
+        if person.feed_id in self.personIds.keys():
+            print(
+                f"Person {person.track_id} already registered as {self.personIds[person.feed_id]}"
+            )
             if self.personIds[person.feed_id] == person.track_id:
+                print("they equal")
                 return True  # track ID known, FaceID has been registered already
+
+        print("New DF Scan")
         dfs = DeepFace.find(
             img_path=np.array(person.human),
             db_path="./dev/database",
             enforce_detection=False,
             silent=True,
         )
-        # TODO: Test for unkown faces, maybe generate db on the fly
         if dfs[0].empty:
+            print("No known face detected")
             return False  # no face found
 
+        print(f'ident: {identity_from_string(dfs[0]["identity"][0])}')
         if self.faceId is None:
-            self.faceId = dfs[0]["identity"]  # if no faceID is known set it now
+            self.faceId = identity_from_string(
+                dfs[0]["identity"][0]
+            )  # if no faceID is known set it now
 
         print(f'Identity is: {dfs[0]["identity"]}')
-        if not dfs[0]["identity"].equals(self.faceId):
+        if not identity_from_string(dfs[0]["identity"][0]) == self.faceId:
             return False  # Face doesn't match registered identity
         self.personIds[person.feed_id] = (
             person.track_id
