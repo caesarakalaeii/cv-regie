@@ -8,6 +8,8 @@ def identity_from_string(string: str):
     return string.split("database/")[1].split("/")[0]
 
 
+
+
 class Box:
     x1: int
     y1: int
@@ -77,31 +79,11 @@ class Person(object):
             print(f"Failed to parse json: {e}")
 
 
-class LinkedFace(object):
-    personIds: dict
+def get_identity(person:Person) -> str:
+        '''
+        Runs DeepFace on given Person
+        '''
 
-    faceId: int or None
-
-    def __init__(self, identity: str = None):
-        self.personIds = {}
-        self.faceId = identity
-
-    def check_if_known_face(self, feed_id: int, personId: int) -> bool:
-        if feed_id not in self.personIds.keys():
-            return False
-        return personId == self.personIds[feed_id]
-
-    def register_person(self, person: Person):
-        print(f"Registering person {person.track_id}")
-        if person.feed_id in self.personIds.keys():
-            print(
-                f"Person {person.track_id} already registered as {self.personIds[person.feed_id]}"
-            )
-            if self.personIds[person.feed_id] == person.track_id:
-                print("they equal")
-                return True  # track ID known, FaceID has been registered already
-
-        print("New DF Scan")
         dfs = DeepFace.find(
             img_path=np.array(person.human),
             db_path="./dev/database",
@@ -110,18 +92,52 @@ class LinkedFace(object):
         )
         if dfs[0].empty:
             print("No known face detected")
-            return False  # no face found
-
-        print(f'ident: {identity_from_string(dfs[0]["identity"][0])}')
-        if self.faceId is None:
-            self.faceId = identity_from_string(
+            return ''  # no face found
+        return identity_from_string(
                 dfs[0]["identity"][0]
-            )  # if no faceID is known set it now
+            )
 
-        print(f'Identity is: {dfs[0]["identity"]}')
-        if not identity_from_string(dfs[0]["identity"][0]) == self.faceId:
+
+class LinkedFace(object):
+    person_ids: dict
+
+    face_id: int or None
+
+    def __init__(self, identity: str = None):
+        self.person_ids = {}
+        self.face_id = identity
+
+    def check_if_known_face(self, feed_id: int, personId: int) -> bool:
+        if feed_id not in self.person_ids.keys():
+            return False
+        return personId == self.person_ids[feed_id]
+    
+    
+    
+    
+
+    def register_person(self, person: Person):
+        print(f"Registering person {person.track_id}")
+        if person.feed_id in self.person_ids.keys():
+            print(
+                f"Person {person.track_id} already registered as {self.person_ids[person.feed_id]}"
+            )
+            if self.person_ids[person.feed_id] == person.track_id:
+                print("they equal")
+                return True  # track ID known, FaceID has been registered already
+
+        print("New DF Scan")
+        indentity = get_identity(person)
+        if indentity == '':
+            return False
+        print(f'ident: {indentity}')
+        if self.face_id is None:
+            self.face_id = indentity # if no faceID is known set it now
+
+        print(f'Identity is: {indentity}')
+        if indentity != self.face_id:
             return False  # Face doesn't match registered identity
-        self.personIds[person.feed_id] = (
+        self.person_ids[person.feed_id] = (
             person.track_id
         )  # faceID has been set, register track id for feed
         return True

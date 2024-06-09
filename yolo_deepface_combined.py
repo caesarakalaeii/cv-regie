@@ -15,6 +15,7 @@ from ultralytics import YOLO
 from ultralytics.engine.results import Results
 from deepface import DeepFace
 from person_face_linker import Person, LinkedFace
+from ranking_helper import RankingHelper
 from pandas import DataFrame
 import os
 
@@ -34,9 +35,9 @@ for cap in caps:
     
 
 yolo = YOLO("./models/detect/yolov8n.pt")
+ranking_helper = RankingHelper((1280,720))
 
-
-linked_faces: [LinkedFace] = []
+linked_faces: list[LinkedFace] = []
 identities = {}
 unknowns = {}
 
@@ -49,15 +50,16 @@ with os.scandir("./dev/database") as it:
 
 print(f"Found {len(identities)} identities: {identities}")
 
-
+frame_count = 0
 while any(cap.isOpened() for cap in caps):
     for feed_id, cap in enumerate(caps):
         ret, frame = cap.read()
         processed_frame: ProcessedFrame = processed_frames[feed_id]
 
         if ret:
+            frame_count += 1
             processed_frame.update_frame(frame)
-            result: [Results] = yolo.track(
+            result: list[Results] = yolo.track(
                 frame,
                 tracker="botsort.yaml",
                 classes=[0],
@@ -102,7 +104,7 @@ while any(cap.isOpened() for cap in caps):
                     found_face = face.register_person(person)
                     if found_face:
                         print(
-                            f"Person with ID {person.track_id} on feed {feed_id} is linked, identity is {face.faceId}"
+                            f"Person with ID {person.track_id} on feed {feed_id} is linked, identity is {face.face_id}"
                         )
                         continue
                     if (feed_id, person.track_id) in unknowns.keys():
@@ -115,6 +117,15 @@ while any(cap.isOpened() for cap in caps):
             box = processed_frame.calculate_frame_box_static()
             processed_frame.update_box(box)
             new_frame = processed_frame.get_processed_frame()
+            if frame_count%10 == 0:
+                num_person = len(processed_frame.persons)
+                num_faces, faces = ranking_helper.get_amount_amount_of_faces(processed_frame.persons)
+                ranking = ranking_helper.calculate_ranking(
+                    new_frame.shape, 
+                    num_person, 
+                    num_faces
+                    )
+                print(f'Ranking of Frame is: {ranking}, found {num_faces} faces, {num_person} Persons, following identities: {faces}')
 
             cv.imshow("Example", new_frame)
 
