@@ -10,6 +10,7 @@ import cv2 as cv
 import numpy as np
 import json
 import ultralytics
+from framing_helper import ProcessedFrame
 from ultralytics import YOLO
 from ultralytics.engine.results import Results
 from deepface import DeepFace
@@ -20,6 +21,7 @@ import os
 
 ports = [0]
 caps = []
+processed_frames = []
 
 
 for port in ports:
@@ -28,6 +30,8 @@ for port in ports:
 for cap in caps:
     cap.set(cv.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv.CAP_PROP_FRAME_HEIGHT, 720)
+    processed_frames.append(ProcessedFrame())
+    
 
 yolo = YOLO("./models/detect/yolov8n.pt")
 
@@ -49,8 +53,10 @@ print(f"Found {len(identities)} identities: {identities}")
 while any(cap.isOpened() for cap in caps):
     for feed_id, cap in enumerate(caps):
         ret, frame = cap.read()
+        processed_frame: ProcessedFrame = processed_frames[feed_id]
 
         if ret:
+            processed_frame.update_frame(frame)
             result: [Results] = yolo.track(
                 frame,
                 tracker="botsort.yaml",
@@ -61,7 +67,6 @@ while any(cap.isOpened() for cap in caps):
             )
 
             human_frame = result[0].plot()
-            tracked = []
             for res in result:
                 for r in res:
                     print(r.tojson())
@@ -69,12 +74,12 @@ while any(cap.isOpened() for cap in caps):
                     person = Person.from_json_string(r.tojson(), frame, feed_id)
                     if person is None:
                         continue
-                    tracked.append(person)
-            print(f"Found {len(tracked)} persons: {tracked}")
+                    processed_frame.update_person(person)
+            print(f"Found {len(processed_frame.persons)} persons: {processed_frame.persons}")
 
-            if len(tracked) == 0:
+            if len(processed_frame.persons) == 0:
                 continue
-            for person in tracked:
+            for person in processed_frame.persons:
                 person: Person
 
                 found_face = False
@@ -106,8 +111,12 @@ while any(cap.isOpened() for cap in caps):
                         )
                     else:
                         unknowns[(feed_id, person.track_id)] = 1
+            
+            box = processed_frame.calculate_frame_box_static()
+            processed_frame.update_box(box)
+            new_frame = processed_frame.get_processed_frame()
 
-            cv.imshow("Example", human_frame)
+            cv.imshow("Example", new_frame)
 
     if cv.waitKey(1) == ord("q"):
         break
