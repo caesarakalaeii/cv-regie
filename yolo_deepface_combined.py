@@ -125,7 +125,7 @@ while any(cap.isOpened() for cap in caps):
                     num_person, 
                     num_faces
                     )
-                print(f'Ranking of Frame is: {ranking}, found {num_faces} faces, {num_person} Persons, following identities: {faces}')
+                print(f'Ranking of Frame is: {ranking}, found {num_faces} faces, {num_person} Persons, shape was {new_frame.shape}, following identities: {faces}')
 
             cv.imshow("Example", new_frame)
 
