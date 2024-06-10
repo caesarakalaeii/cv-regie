@@ -61,10 +61,11 @@ while any(cap.isOpened() for cap in caps):
     for feed_id, cap in enumerate(caps):
         ret, frame = cap.read()
         processed_frame: ProcessedFrame = processed_frames[feed_id]
-        processed_frame.remove_persons_on_feed(
-            feed_id
-        )  # purge all persons, so no remains stick
+
         if ret:
+            processed_frame.remove_persons_on_feed(
+                feed_id
+            )  # purge all persons, so no remains stick
             frame_counts[feed_id] += 1
             processed_frame.update_frame(frame)
             result: list[Results] = yolos[feed_id].track(
@@ -130,7 +131,7 @@ while any(cap.isOpened() for cap in caps):
             processed_frame.update_box(box)
             new_frame = processed_frame.get_processed_frame()
             available_frames[feed_id] = new_frame
-            if frame_counts[feed_id] % 30 == 0 or frame_counts[feed_id] == 1:
+            if frame_counts[feed_id] % 10 == 0 or frame_counts[feed_id] == 1:
                 print(f"Frame count: {frame_counts[feed_id]}, New ranking")
                 num_person = len(processed_frame.persons)
                 num_faces, faces = ranking_helper.get_amount_amount_of_faces(

@@ -17,7 +17,7 @@ def pad_to_16by9(box: Box, target_shape=(16, 9)) -> Box:
         new_y2 = box.y2 + delta_height / 2
         # Ensure coordinates are non-negative
         if new_y1 < 0:
-            delta_height = box.y1 * 2
+            delta_height = box.y1 - new_y1
             new_y1 = 0
             new_y2 = box_height + delta_height
         box.y1 = int(new_y1)
@@ -30,7 +30,7 @@ def pad_to_16by9(box: Box, target_shape=(16, 9)) -> Box:
         new_x2 = box.x2 + delta_width / 2
         # Ensure coordinates are non-negative
         if new_x1 < 0:
-            delta_width = box.x1 * 2
+            delta_width = box.x1 - new_x1
             new_x1 = 0
             new_x2 = box_width + delta_width
         box.x1 = int(new_x1)
