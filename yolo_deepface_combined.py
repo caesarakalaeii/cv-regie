@@ -10,7 +10,7 @@ import cv2 as cv
 import numpy as np
 import json
 import ultralytics
-from framing_helper import ProcessedFrame
+from framing_helper import ProcessedFrame, pad_to_16by9
 from ultralytics import YOLO
 from ultralytics.engine.results import Results
 from deepface import DeepFace
@@ -20,9 +20,13 @@ from pandas import DataFrame
 import os
 
 
-ports = [0]
+ports = [0, 5, 7]
 caps = []
 processed_frames = []
+ranks = []
+available_frames = []
+yolos = []
+frame_counts = []
 
 
 for port in ports:
@@ -32,10 +36,12 @@ for cap in caps:
     cap.set(cv.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv.CAP_PROP_FRAME_HEIGHT, 720)
     processed_frames.append(ProcessedFrame())
-    
+    ranks.append(0)
+    available_frames.append(0)
+    frame_counts.append(0)
 
-yolo = YOLO("./models/detect/yolov8n.pt")
-ranking_helper = RankingHelper((1280,720))
+    yolos.append(YOLO("./models/detect/yolov8n.pt"))
+ranking_helper = RankingHelper((1280, 720))
 
 linked_faces: list[LinkedFace] = []
 identities = {}
@@ -50,16 +56,18 @@ with os.scandir("./dev/database") as it:
 
 print(f"Found {len(identities)} identities: {identities}")
 
-frame_count = 0
+
 while any(cap.isOpened() for cap in caps):
     for feed_id, cap in enumerate(caps):
         ret, frame = cap.read()
         processed_frame: ProcessedFrame = processed_frames[feed_id]
-
+        processed_frame.remove_persons_on_feed(
+            feed_id
+        )  # purge all persons, so no remains stick
         if ret:
-            frame_count += 1
+            frame_counts[feed_id] += 1
             processed_frame.update_frame(frame)
-            result: list[Results] = yolo.track(
+            result: list[Results] = yolos[feed_id].track(
                 frame,
                 tracker="botsort.yaml",
                 classes=[0],
@@ -69,6 +77,8 @@ while any(cap.isOpened() for cap in caps):
             )
 
             human_frame = result[0].plot()
+            cv.imshow(f"Detect{feed_id}", human_frame)
+
             for res in result:
                 for r in res:
                     print(r.tojson())
@@ -77,7 +87,9 @@ while any(cap.isOpened() for cap in caps):
                     if person is None:
                         continue
                     processed_frame.update_person(person)
-            print(f"Found {len(processed_frame.persons)} persons: {processed_frame.persons}")
+            print(
+                f"Found {len(processed_frame.persons)} persons: {processed_frame.persons}"
+            )
 
             if len(processed_frame.persons) == 0:
                 continue
@@ -113,21 +125,29 @@ while any(cap.isOpened() for cap in caps):
                         )
                     else:
                         unknowns[(feed_id, person.track_id)] = 1
-            
+
             box = processed_frame.calculate_frame_box_static()
             processed_frame.update_box(box)
             new_frame = processed_frame.get_processed_frame()
-            if frame_count%10 == 0:
+            available_frames[feed_id] = new_frame
+            if frame_counts[feed_id] % 30 == 0 or frame_counts[feed_id] == 1:
+                print(f"Frame count: {frame_counts[feed_id]}, New ranking")
                 num_person = len(processed_frame.persons)
-                num_faces, faces = ranking_helper.get_amount_amount_of_faces(processed_frame.persons)
+                num_faces, faces = ranking_helper.get_amount_amount_of_faces(
+                    processed_frame.persons
+                )
                 ranking = ranking_helper.calculate_ranking(
-                    new_frame.shape, 
-                    num_person, 
-                    num_faces
-                    )
-                print(f'Ranking of Frame is: {ranking}, found {num_faces} faces, {num_person} Persons, shape was {new_frame.shape}, following identities: {faces}')
+                    new_frame.shape, num_person, num_faces
+                )
+                print(
+                    f"Ranking of Feed {feed_id} is: {ranking}, found {num_faces} faces, {num_person} Persons, shape was {new_frame.shape}, following identities: {faces}"
+                )
+                ranks[feed_id] = ranking
 
-            cv.imshow("Example", new_frame)
+        print(f"Rankings are: {ranks}")
+        array = np.array([ranks])
+        best_feed = np.argmax(array)
+        cv.imshow("Example", available_frames[best_feed])
 
     if cv.waitKey(1) == ord("q"):
         break

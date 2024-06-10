@@ -8,8 +8,6 @@ def identity_from_string(string: str):
     return string.split("database/")[1].split("/")[0]
 
 
-
-
 class Box:
     x1: int
     y1: int
@@ -21,6 +19,15 @@ class Box:
         self.y1 = int(y1)
         self.y2 = int(y2)
         self.x2 = int(x2)
+
+    def width(self):
+        return self.x2 - self.x1
+
+    def height(self):
+        return self.y2 - self.y1
+
+    def center(self):
+        return (self.x1 + self.x2) / 2, (self.y1 + self.y2) / 2
 
     def cut_out(self, frame: np.ndarray) -> np.ndarray:
         return frame[self.y1 : self.y2, self.x1 : self.x2]
@@ -79,23 +86,21 @@ class Person(object):
             print(f"Failed to parse json: {e}")
 
 
-def get_identity(person:Person) -> str:
-        '''
-        Runs DeepFace on given Person
-        '''
+def get_identity(person: Person) -> str:
+    """
+    Runs DeepFace on given Person
+    """
 
-        dfs = DeepFace.find(
-            img_path=np.array(person.human),
-            db_path="./dev/database",
-            enforce_detection=False,
-            silent=True,
-        )
-        if dfs[0].empty:
-            print("No known face detected")
-            return ''  # no face found
-        return identity_from_string(
-                dfs[0]["identity"][0]
-            )
+    dfs = DeepFace.find(
+        img_path=np.array(person.human),
+        db_path="./dev/database",
+        enforce_detection=False,
+        silent=True,
+    )
+    if dfs[0].empty:
+        print("No known face detected")
+        return ""  # no face found
+    return identity_from_string(dfs[0]["identity"][0])
 
 
 class LinkedFace(object):
@@ -111,10 +116,6 @@ class LinkedFace(object):
         if feed_id not in self.person_ids.keys():
             return False
         return personId == self.person_ids[feed_id]
-    
-    
-    
-    
 
     def register_person(self, person: Person):
         print(f"Registering person {person.track_id}")
@@ -128,13 +129,13 @@ class LinkedFace(object):
 
         print("New DF Scan")
         indentity = get_identity(person)
-        if indentity == '':
+        if indentity == "":
             return False
-        print(f'ident: {indentity}')
+        print(f"ident: {indentity}")
         if self.face_id is None:
-            self.face_id = indentity # if no faceID is known set it now
+            self.face_id = indentity  # if no faceID is known set it now
 
-        print(f'Identity is: {indentity}')
+        print(f"Identity is: {indentity}")
         if indentity != self.face_id:
             return False  # Face doesn't match registered identity
         self.person_ids[person.feed_id] = (
