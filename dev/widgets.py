@@ -9,6 +9,9 @@ from threading import Thread
 import cv2 as cv
 from timeit import default_timer as timer
 from ultralytics import YOLO
+from deepface import DeepFace
+import numpy as np
+
 
 class ImageShowWidget():
     "Main widget to show all camera feeds"
@@ -18,7 +21,8 @@ class ImageShowWidget():
                  resolution: [int, int],
                  camera_fps: int,
                  human_detection_path: str,
-                 face_detection_path: str):
+                 face_detection_path: str,
+                 database_path: str):
 
         self.ports = ports
         self.resolution = resolution
@@ -26,6 +30,7 @@ class ImageShowWidget():
 
         self.human_detection_path = human_detection_path
         self.face_detection_path = face_detection_path
+        self.database_path = database_path
 
         self.cameraWidgets = []
 
@@ -36,7 +41,12 @@ class ImageShowWidget():
     def start(self):
 
         for port in self.ports:
-            widget = CameraWidget(port, self.resolution, self.camera_fps, self.human_detection_path, self.face_detection_path)
+            widget = CameraWidget(port,
+                                  self.resolution,
+                                  self.camera_fps,
+                                  self.human_detection_path,
+                                  self.face_detection_path,
+                                  self.database_path)
             self.cameraWidgets.append(widget)
 
         for widget in self.cameraWidgets:
@@ -79,7 +89,8 @@ class CameraWidget():
                  resolution: [int, int],
                  camera_fps: int,
                  human_detection_path: str,
-                 face_detection_path: str):
+                 face_detection_path: str,
+                 database_path):
 
         self.port = port
         self.resolution = resolution
@@ -96,6 +107,12 @@ class CameraWidget():
         self.face_detection = False
         self.face_detection_widget = None
         self.face_detection_frame = None
+
+        self.database_path = database_path
+        self.deepface_detection_started = False
+        self.deepface_detection = False
+        self.deepface_detection_widget = None
+        self.deepface_detection_frame = None
 
         self.frame = None
         self.frame_counter = 0
@@ -116,6 +133,7 @@ class CameraWidget():
         if self.grabbed:
             self.human_detection_widget = HumanWidget(self, self.human_detection_path)
             self.face_detection_widget = FaceWidget(self, self.face_detection_path)
+            self.deepface_detection_widget = DeepFaceWidget(self, self.database_path)
             self.thread.start()
 
     def run(self):
@@ -130,6 +148,10 @@ class CameraWidget():
                 if not self.face_detection_started:
                     self.face_detection_widget.start()
                     self.face_detection_started = True
+
+                if not self.deepface_detection_started:
+                    self.deepface_detection_widget.start()
+                    self.deepface_detection_started = True
 
                 self.grabbed, self.frame = self.cap.read()
                 frame_counter += 1
@@ -146,6 +168,7 @@ class CameraWidget():
         self.stopped = True
         self.human_detection_widget.stop()
         self.face_detection_widget.stop()
+        self.deepface_detection_widget.stop()
         self.cap.release()
 
 
@@ -231,6 +254,41 @@ class FaceWidget():
         self.stopped = True
 
 
+class DeepFaceWidget():
+
+    def __init__(self,
+                 widget: CameraWidget,
+                 database_path: str):
+
+        self.widget = widget
+
+        self.database_path = database_path
+
+        self.widget_frame = None
+
+        self.thread = Thread(target=self.run)
+        self.stopped = False
+
+    def start(self):
+        self.thread.start()
+
+    def run(self):
+        while not self.stopped:
+            if self.widget.grabbed:
+                self.widget_frame = self.widget.frame
+                dataframes = DeepFace.find(img_path = np.array(self.widget_frame),
+                                           db_path = self.database_path,
+                                           enforce_detection=False,
+                                           silent=True,
+                                           detector_backend = "yolov8"
+                                           )
+
+                if not dataframes[0].empty:
+                    print(dataframes[0]["identity"][0][dataframes[0]["identity"][0].index(self.database_path + "\\")+len(self.database_path + "\\"):][:dataframes[0]["identity"][0][dataframes[0]["identity"][0].index(self.database_path + "\\")+len(self.database_path+"\\"):].index("\\")])
+
+    def stop(self):
+        self.stopped = True
+
 if __name__ == "__main__":
     ports = [0]
     resolution = [720, 1280]
@@ -238,9 +296,11 @@ if __name__ == "__main__":
 
     human_detection_path = "models/detection/yolov8n.pt"
     face_detection_path = "models/face/yolov8n-face.pt"
+    database_path = "./database"
 
     imageShow = ImageShowWidget(ports,
                                 resolution,
                                 camera_fps,
                                 human_detection_path,
-                                face_detection_path)
+                                face_detection_path,
+                                database_path)
