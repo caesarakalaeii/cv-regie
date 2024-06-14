@@ -20,7 +20,7 @@ from pandas import DataFrame
 import os
 
 
-ports = [0, 5, 7]
+ports = [0, 4, 6]
 caps = []
 processed_frames = []
 ranks = []
@@ -64,8 +64,7 @@ while any(cap.isOpened() for cap in caps):
 
         if ret:
 
-
-            #find persons
+            # find persons
             processed_frame.remove_persons_on_feed(
                 feed_id
             )  # purge all persons, so no remains stick
@@ -97,6 +96,7 @@ while any(cap.isOpened() for cap in caps):
             )
 
             if len(processed_frame.persons) == 0:
+                ranks[feed_id] = 0
                 continue
 
             # Link Identity to persons
@@ -133,7 +133,7 @@ while any(cap.isOpened() for cap in caps):
                     else:
                         unknowns[(feed_id, person.track_id)] = 1
 
-            #Cut feed to size
+            # Cut feed to size
             box = processed_frame.calculate_frame_box_static()
             processed_frame.update_box(box)
             new_frame = processed_frame.get_processed_frame()
