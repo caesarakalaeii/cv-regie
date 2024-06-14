@@ -20,6 +20,7 @@ def pad_to_16by9(box: Box, target_shape=(16, 9)) -> Box:
             delta_height = box.y1 - new_y1
             new_y1 = 0
             new_y2 = box_height + delta_height
+
         box.y1 = int(new_y1)
         box.y2 = int(new_y2)
     else:

@@ -63,6 +63,9 @@ while any(cap.isOpened() for cap in caps):
         processed_frame: ProcessedFrame = processed_frames[feed_id]
 
         if ret:
+
+
+            #find persons
             processed_frame.remove_persons_on_feed(
                 feed_id
             )  # purge all persons, so no remains stick
@@ -80,6 +83,7 @@ while any(cap.isOpened() for cap in caps):
             human_frame = result[0].plot()
             cv.imshow(f"Detect{feed_id}", human_frame)
 
+            # reident Persons
             for res in result:
                 for r in res:
                     print(r.tojson())
@@ -94,9 +98,11 @@ while any(cap.isOpened() for cap in caps):
 
             if len(processed_frame.persons) == 0:
                 continue
+
+            # Link Identity to persons
+
             for person in processed_frame.persons:
                 person: Person
-
                 found_face = False
                 for face in linked_faces:
                     face: LinkedFace
@@ -127,10 +133,13 @@ while any(cap.isOpened() for cap in caps):
                     else:
                         unknowns[(feed_id, person.track_id)] = 1
 
+            #Cut feed to size
             box = processed_frame.calculate_frame_box_static()
             processed_frame.update_box(box)
             new_frame = processed_frame.get_processed_frame()
             available_frames[feed_id] = new_frame
+
+            # Ranking
             if frame_counts[feed_id] % 10 == 0 or frame_counts[feed_id] == 1:
                 print(f"Frame count: {frame_counts[feed_id]}, New ranking")
                 num_person = len(processed_frame.persons)
@@ -145,6 +154,7 @@ while any(cap.isOpened() for cap in caps):
                 )
                 ranks[feed_id] = ranking
 
+        # Coohe best feed
         print(f"Rankings are: {ranks}")
         array = np.array([ranks])
         best_feed = np.argmax(array)
