@@ -2,9 +2,12 @@ from pandas import DataFrame
 import numpy as np
 import json
 from deepface import DeepFace
+import os
 
 
 def identity_from_string(string: str):
+    if os.name == "nt":
+        return string.split("database\\")[1].split("\\")[0]
     return string.split("database/")[1].split("/")[0]
 
 
