@@ -52,7 +52,7 @@ while True:
           detector_backend = "yolov8"
         )
         if not dfs[0].empty:
-            #print(dfs[0]["identity"][0][dfs[0]["identity"][0].index(db_path + "\\")+len(db_path + "\\"):][:dfs[0]["identity"][0][dfs[0]["identity"][0].index(db_path + "\\")+len("db_path + \\"):].index("\\")])
+            print(dfs[0]["identity"][0][dfs[0]["identity"][0].index(db_path + "\\")+len(db_path + "\\"):][:dfs[0]["identity"][0][dfs[0]["identity"][0].index(db_path + "\\")+len("db_path + \\"):].index("\\")])
             idenify_counter += 1
             
         cv.imshow("Frame", frame)

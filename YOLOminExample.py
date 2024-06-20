@@ -8,12 +8,12 @@ Created on Fri May 17 11:11:02 2024
 import cv2 as cv
 from ultralytics import YOLO
 
-cap = cv.VideoCapture(0)
+cap = cv.VideoCapture(1)
 
 cap.set(cv.CAP_PROP_FRAME_WIDTH, 1280)
 cap.set(cv.CAP_PROP_FRAME_HEIGHT, 720)
 
-model = YOLO('models\detect\yolov8n.pt')
+model = YOLO('dev/models/face/yolov8n-face.pt')
 
 while cap.isOpened():
     
@@ -29,6 +29,9 @@ while cap.isOpened():
         
         human_frame = result[0].plot()
         
+        if result[0].boxes.id is not None:
+            counts = max(result[0].boxes.id.int().cpu().tolist())
+
         cv.imshow('Example', human_frame)
     
     

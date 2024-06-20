@@ -19,16 +19,16 @@ Application based on open-cv and OBS to assist in switching between scenes and f
 
 ## ToDos:
 
-- More Threading
-    - DeepFace + YoloFace + Yolo get own Threads, use Ranking 
-    - stuff from yolo_deepface_combined
-    - Handover between Feeds stable
-    - disable not needed nets in DeepFace
-- Check for Unix/NT based systems
-    - strip DeepFace identiy accordingly (os.name == 'nt' for win)
+- [] More Threading
+    - [ ] DeepFace + YoloFace + Yolo get own Threads, use Ranking 
+    - [ ] stuff from yolo_deepface_combined
+    - [ ] Handover between Feeds stable
+    - [X] disable not needed nets in DeepFace (done in widgets. find Function does not use other models)
+- [ ] Check for Unix/NT based systems
+    - [ ] strip DeepFace identiy accordingly (os.name == 'nt' for win)
 
-- Optinal:
-    - Export Feed as VirtualWebCam
-    - prototype for OBS connection
+- [ ] Optinal:
+    - [ ] Export Feed as VirtualWebCam
+    - [ ] prototype for OBS connection
 
 
