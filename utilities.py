@@ -2,6 +2,7 @@
 module comprised of utility functions, manly meant for static methods that provide rudimentary functions
 """
 
+import json
 import os
 from deepface import DeepFace
 import numpy as np
