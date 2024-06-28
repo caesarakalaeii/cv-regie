@@ -18,13 +18,3 @@ class RankingHelper(object):
                 continue
             faces.append(identity)
         return len(faces), faces
-
-    def calculate_ranking(self, frame_shape, person_count, face_count) -> int:
-
-        ranking = face_count * 3
-
-        ranking += person_count * 2
-
-        ranking += frame_shape[0] / self.max_res[0] + frame_shape[1] / self.max_res[1]
-
-        return ranking

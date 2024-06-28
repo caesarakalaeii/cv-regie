@@ -4,7 +4,7 @@ Created on Tue May 21 10:04:30 2024
 
 @author: Wittke
 """
-
+from utilities import identity_from_string, calculate_ranking, pad_to_16by9, Box
 from threading import Thread
 import cv2 as cv
 from timeit import default_timer as timer
@@ -13,16 +13,18 @@ from deepface import DeepFace
 import numpy as np
 
 
-class ImageShowWidget():
+class ImageShowWidget:
     "Main widget to show all camera feeds"
 
-    def __init__(self,
-                 ports: [..., int],
-                 resolution: [int, int],
-                 camera_fps: int,
-                 human_detection_path: str,
-                 face_detection_path: str,
-                 database_path: str):
+    def __init__(
+        self,
+        ports: [..., int],
+        resolution: [int, int],
+        camera_fps: int,
+        human_detection_path: str,
+        face_detection_path: str,
+        database_path: str,
+    ):
 
         self.ports = ports
         self.resolution = resolution
@@ -41,12 +43,14 @@ class ImageShowWidget():
     def start(self):
 
         for port in self.ports:
-            widget = CameraWidget(port,
-                                  self.resolution,
-                                  self.camera_fps,
-                                  self.human_detection_path,
-                                  self.face_detection_path,
-                                  self.database_path)
+            widget = CameraWidget(
+                port,
+                self.resolution,
+                self.camera_fps,
+                self.human_detection_path,
+                self.face_detection_path,
+                self.database_path,
+            )
             self.cameraWidgets.append(widget)
 
         for widget in self.cameraWidgets:
@@ -70,7 +74,7 @@ class ImageShowWidget():
                     frame = widget.face_detection_frame
                     cv.imshow(f"Camera-{widget.port}-face", frame)
 
-                    #print(f"Port:{widget.port} - fps:{widget.fps}")
+                    # print(f"Port:{widget.port} - fps:{widget.fps}")
 
                 if cv.waitKey(1) == ord("q"):
                     self.stop()
@@ -82,15 +86,25 @@ class ImageShowWidget():
         cv.destroyAllWindows()
 
 
-class CameraWidget():
+class WebCamWidget(ImageShowWidget):
 
-    def __init__(self,
-                 port: int,
-                 resolution: [int, int],
-                 camera_fps: int,
-                 human_detection_path: str,
-                 face_detection_path: str,
-                 database_path):
+    def run(self):
+        while not self.stopped:
+
+            best_feed = np.argmax(self.cameraWidgets, axis=0)
+
+
+class CameraWidget:
+
+    def __init__(
+        self,
+        port: int,
+        resolution: [int, int],
+        camera_fps: int,
+        human_detection_path: str,
+        face_detection_path: str,
+        database_path,
+    ):
 
         self.port = port
         self.resolution = resolution
@@ -102,7 +116,7 @@ class CameraWidget():
         self.human_detection_widget = None
         self.human_detection_frame = None
         self.human_detection_score = 0
-        self.human_detection_data = [[],[],[],[],[]]
+        self.human_detection_data = [[], [], [], [], []]
 
         self.face_detection_path = face_detection_path
         self.face_detection_started = False
@@ -111,14 +125,14 @@ class CameraWidget():
         self.face_detection_frame = None
         self.face_detection_score = 0
         self.face_detection_score = 0
-        self.face_detection_data = [[],[],[],[],[]]
+        self.face_detection_data = [[], [], [], [], []]
 
         self.database_path = database_path
         self.deepface_detection_started = False
         self.deepface_detection = False
         self.deepface_detection_widget = None
         self.deepface_detection_frame = None
-        self.deepface_detections_data = [[],[],[],[],[]]
+        self.deepface_detections_data = [[], [], [], [], []]
 
         self.frame = None
         self.frame_counter = 0
@@ -180,19 +194,50 @@ class CameraWidget():
         self.deepface_detection_widget.stop()
         self.cap.release()
 
+    def get_ranking(self):
 
-class HumanWidget():
+        return calculate_ranking(
+            self.frame.shape, self.human_detection_score, self.face_detection_score
+        )
 
-    def __init__(self,
-                 widget: CameraWidget,
-                 human_detection_path: str):
+
+class CroppedCameraWidget(CameraWidget):
+
+    def calculate_frame_box_static(self) -> Box:
+        """
+        TODO: use yolo data instead of Person
+        """
+        lowest_x = 99999
+        highest_x = 0
+        lowest_y = 99999
+        highest_y = 0
+
+        for person in self.persons:
+            if person.box.x1 < lowest_x:
+                lowest_x = person.box.x1
+            if person.box.x2 > highest_x:
+                highest_x = person.box.x2
+            if person.box.y1 < lowest_y:
+                lowest_y = person.box.y1
+            if person.box.y2 > highest_y:
+                highest_y = person.box.y2
+
+        box = Box(lowest_x, lowest_y, highest_x, highest_y)
+        box = pad_to_16by9(box, target_shape=(16, 9))
+
+        return box
+
+
+class HumanWidget:
+
+    def __init__(self, widget: CameraWidget, human_detection_path: str):
 
         self.widget = widget
 
         self.human_detection = False
         self.human_detection_path = human_detection_path
         self.human_detection_score = 0
-        self.human_detection_data = [[],[],[],[],[]]
+        self.human_detection_data = [[], [], [], [], []]
 
         self.model = YOLO(human_detection_path)
 
@@ -209,11 +254,13 @@ class HumanWidget():
         while not self.stopped:
             if self.widget.grabbed:
                 self.widget_frame = self.widget.frame
-                result = self.model.track(self.widget_frame,
-                                          tracker="bytetrack.yaml",
-                                          imgsz=320,
-                                          classes=[0],
-                                          verbose=False)
+                result = self.model.track(
+                    self.widget_frame,
+                    tracker="bytetrack.yaml",
+                    imgsz=320,
+                    classes=[0],
+                    verbose=False,
+                )
 
                 self.human_detection_score = self.countIDs(result)
 
@@ -230,39 +277,34 @@ class HumanWidget():
     def stop(self):
         self.stopped = True
 
-    def countIDs(self,
-                 result):
+    def countIDs(self, result):
         counts = 0
         if result[0].boxes.id is not None:
             counts = max(result[0].boxes.id.int().cpu().tolist())
         return counts
 
-    def getResultData(self,
-                      result):
+    def getResultData(self, result):
+        data = []
+
         if result[0].boxes.id is not None:
-            for i,identity in enumerate(result[0].boxes.id):
-                x = result[0].boxes.xywh[i][0]
-                y = result[0].boxes.xywh[i][1]
-                w = result[0].boxes.xywh[i][2]
-                h = result[0].boxes.xywh[i][3]
+            for i, identity in enumerate(result[0].boxes.id):
 
-                if i == 0:
-                    data = [[int(identity)],[int(x)],[int(y)],[int(h)],[int(w)]]
-                else:
-                    data.append([[int(identity)],[int(x)],[int(y)],[int(h)],[int(w)]])
+                x, y, w, h = result[0].boxes.xywh[i]
+                data.append([[int(identity)], [int(x)], [int(y)], [int(h)], [int(w)]])
 
-class FaceWidget():
+        return data
 
-    def __init__(self,
-                 widget: CameraWidget,
-                 face_detection_path: str):
+
+class FaceWidget:
+
+    def __init__(self, widget: CameraWidget, face_detection_path: str):
 
         self.widget = widget
 
         self.face_detection = False
         self.face_detection_path = face_detection_path
         self.face_detection_score = 0
-        self.face_detection_data = [[],[],[],[],[]]
+        self.face_detection_data = [[], [], [], [], []]
 
         self.model = YOLO(face_detection_path)
 
@@ -279,11 +321,13 @@ class FaceWidget():
         while not self.stopped:
             if self.widget.grabbed:
                 self.widget_frame = self.widget.frame
-                result = self.model.track(self.widget_frame,
-                                          tracker="bytetrack.yaml",
-                                          imgsz=320,
-                                          classes=[0],
-                                          verbose=False)
+                result = self.model.track(
+                    self.widget_frame,
+                    tracker="bytetrack.yaml",
+                    imgsz=320,
+                    classes=[0],
+                    verbose=False,
+                )
 
                 self.face_detection_score = self.countIDs(result)
 
@@ -300,38 +344,31 @@ class FaceWidget():
     def stop(self):
         self.stopped = True
 
-    def countIDs(self,
-                 result):
+    def countIDs(self, result):
         counts = 0
         if result[0].boxes.id is not None:
             counts = max(result[0].boxes.id.int().cpu().tolist())
         return counts
 
-    def getResultData(self,
-                      result):
+    def getResultData(self, result):
         if result[0].boxes.id is not None:
-            for i,identity in enumerate(result[0].boxes.id):
-                x = result[0].boxes.xywh[i][0]
-                y = result[0].boxes.xywh[i][1]
-                w = result[0].boxes.xywh[i][2]
-                h = result[0].boxes.xywh[i][3]
-            
-                if i == 0:
-                    data = [[identity],[x],[y],[h],[w]]
-                else:
-                    data.append([[identity],[x],[y],[h],[w]])
+            data = []
+            for i, identity in enumerate(result[0].boxes.id):
+                x, y, w, h = result[0].boxes.xywh[i]
 
-class DeepFaceWidget():
+                data.append([[identity], [x], [y], [h], [w]])
+            return data
 
-    def __init__(self,
-                 widget: CameraWidget,
-                 database_path: str):
+
+class DeepFaceWidget:
+
+    def __init__(self, widget: CameraWidget, database_path: str):
 
         self.widget = widget
 
         self.database_path = database_path
 
-        self.deepface_detections_data = [[],[],[],[],[]]
+        self.deepface_detections_data = [[], [], [], [], []]
 
         self.widget_frame = None
 
@@ -345,13 +382,14 @@ class DeepFaceWidget():
         while not self.stopped:
             if self.widget.grabbed:
                 self.widget_frame = self.widget.frame
-                dataframes = DeepFace.find(img_path = np.array(self.widget_frame),
-                                           db_path = self.database_path,
-                                           enforce_detection=False,
-                                           silent=True,
-                                           detector_backend = "yolov8",
-                                           distance_metric = "euclidean_l2"
-                                           )
+                dataframes = DeepFace.find(
+                    img_path=np.array(self.widget_frame),
+                    db_path=self.database_path,
+                    enforce_detection=False,
+                    silent=True,
+                    detector_backend="yolov8",
+                    distance_metric="euclidean_l2",
+                )
 
                 self.deepface_detections_data = self.getResultData(dataframes)
 
@@ -360,22 +398,21 @@ class DeepFaceWidget():
     def stop(self):
         self.stopped = True
 
-    def getResultData(self,
-                      dataframes):
+    def getResultData(self, dataframes):
+        data = []
+
         if len(dataframes) > 0:
-            for i,entry in enumerate(dataframes):
+            for i, entry in enumerate(dataframes):
                 if not entry.empty:
-                    identity = entry["identity"][0][len(database_path)+1:-6]
+                    identity = identity_from_string(entry["identity"][0])
                     x = entry["source_x"][0]
                     y = entry["source_y"][0]
                     w = entry["source_w"][0]
                     h = entry["source_h"][0]
+                    data.append([[identity], [x], [y], [h], [w]])
+        return data
 
-                    if i == 0:
-                        data = [[identity], [x], [y], [h], [w]]
-                    else:
-                        data.append([[identity], [x], [y], [h], [w]])
-                        
+
 if __name__ == "__main__":
     ports = [1]
     resolution = [720, 1280]
@@ -385,9 +422,11 @@ if __name__ == "__main__":
     face_detection_path = "models/face/yolov8n-face.pt"
     database_path = "./database"
 
-    imageShow = ImageShowWidget(ports,
-                                resolution,
-                                camera_fps,
-                                human_detection_path,
-                                face_detection_path,
-                                database_path)
+    imageShow = ImageShowWidget(
+        ports,
+        resolution,
+        camera_fps,
+        human_detection_path,
+        face_detection_path,
+        database_path,
+    )

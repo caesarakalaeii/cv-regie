@@ -2,38 +2,7 @@ from pandas import DataFrame
 import numpy as np
 import json
 from deepface import DeepFace
-import os
-
-
-def identity_from_string(string: str):
-    if os.name == "nt":
-        return string.split("database\\")[1].split("\\")[0]
-    return string.split("database/")[1].split("/")[0]
-
-
-class Box:
-    x1: int
-    y1: int
-    x2: int
-    y2: int
-
-    def __init__(self, x1, y1, x2, y2):
-        self.x1 = int(x1)
-        self.y1 = int(y1)
-        self.y2 = int(y2)
-        self.x2 = int(x2)
-
-    def width(self):
-        return self.x2 - self.x1
-
-    def height(self):
-        return self.y2 - self.y1
-
-    def center(self):
-        return (self.x1 + self.x2) / 2, (self.y1 + self.y2) / 2
-
-    def cut_out(self, frame: np.ndarray) -> np.ndarray:
-        return frame[self.y1 : self.y2, self.x1 : self.x2]
+from utilities import Box, identity_from_string
 
 
 class Person(object):
