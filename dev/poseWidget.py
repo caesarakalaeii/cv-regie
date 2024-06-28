@@ -19,15 +19,17 @@ from deepface import DeepFace
 import numpy as np
 
 
-class ImageShowWidget():
+class ImageShowWidget:
     "Main widget to show all camera feeds"
 
-    def __init__(self,
-                 ports: [..., int],
-                 resolution: [int, int],
-                 camera_fps: int,
-                 pose_detection_path: str,
-                 database_path: str):
+    def __init__(
+        self,
+        ports: [..., int],
+        resolution: [int, int],
+        camera_fps: int,
+        pose_detection_path: str,
+        database_path: str,
+    ):
 
         self.ports = ports
         self.resolution = resolution
@@ -38,18 +40,16 @@ class ImageShowWidget():
 
         self.cameraWidgets = []
 
-        self.stopped = False
-
-        self.start()
-
     def start(self):
 
         for port in self.ports:
-            widget = CameraWidget(port,
-                                  self.resolution,
-                                  self.camera_fps,
-                                  self.pose_detection_path,
-                                  self.database_path)
+            widget = CameraWidget(
+                port,
+                self.resolution,
+                self.camera_fps,
+                self.pose_detection_path,
+                self.database_path,
+            )
             self.cameraWidgets.append(widget)
 
         for widget in self.cameraWidgets:
@@ -58,6 +58,7 @@ class ImageShowWidget():
         self.run()
 
     def run(self):
+        self.stopped = False
 
         while not self.stopped:
             for widget in self.cameraWidgets:
@@ -69,7 +70,7 @@ class ImageShowWidget():
                     frame = widget.pose_detection_frame
                     cv.imshow(f"Camera-{widget.port}-pose", frame)
 
-                    #print(f"Port:{widget.port} - fps:{widget.fps}")
+                    # print(f"Port:{widget.port} - fps:{widget.fps}")
 
                 if cv.waitKey(1) == ord("q"):
                     self.stop()
@@ -81,14 +82,16 @@ class ImageShowWidget():
         cv.destroyAllWindows()
 
 
-class CameraWidget():
+class CameraWidget:
 
-    def __init__(self,
-                 port: int,
-                 resolution: [int, int],
-                 camera_fps: int,
-                 pose_detection_path: str,
-                 database_path):
+    def __init__(
+        self,
+        port: int,
+        resolution: [int, int],
+        camera_fps: int,
+        pose_detection_path: str,
+        database_path,
+    ):
 
         self.port = port
         self.resolution = resolution
@@ -101,7 +104,7 @@ class CameraWidget():
         self.pose_detection_frame = None
         self.pose_detection_score = 0
         self.pose_detection_data = np.array([[0, 0, 0, 0, 0]])
-        self.pose_detection_keypoints = np.array([[[0,0], [0,0], [0,0]]])
+        self.pose_detection_keypoints = np.array([[[0, 0], [0, 0], [0, 0]]])
 
         self.database_path = database_path
         self.deepface_detection_started = False
@@ -146,15 +149,22 @@ class CameraWidget():
                     self.deepface_detection_widget.start()
                     self.deepface_detection_started = True
 
-                self.identity_data = np.copy( self.pose_detection_data)
-                self.identity_data[:,0] = -1
+                self.identity_data = np.copy(self.pose_detection_data)
+                self.identity_data[:, 0] = -1
 
                 for identity in self.deepface_detections_data:
                     center = identity[1:]
-                    euclid_norm = np.sum(np.sqrt(np.sum(np.power(center-self.pose_detection_keypoints,2), axis=2)), axis = 1)
+                    euclid_norm = np.sum(
+                        np.sqrt(
+                            np.sum(
+                                np.power(center - self.pose_detection_keypoints, 2),
+                                axis=2,
+                            )
+                        ),
+                        axis=1,
+                    )
                     min_idx = np.argmin(euclid_norm)
                     self.identity_data[min_idx][0] = identity[0]
-
 
                 self.grabbed, self.frame = self.cap.read()
                 frame_counter += 1
@@ -175,11 +185,9 @@ class CameraWidget():
         self.cap.release()
 
 
-class PoseWidget():
+class PoseWidget:
 
-    def __init__(self,
-                 widget: CameraWidget,
-                 pose_detection_path: str):
+    def __init__(self, widget: CameraWidget, pose_detection_path: str):
 
         self.widget = widget
 
@@ -187,7 +195,7 @@ class PoseWidget():
         self.pose_detection_path = pose_detection_path
         self.pose_detection_score = 0
         self.pose_detection_data = np.array([[0, 0, 0, 0, 0]])
-        self.pose_detection_keypoints = np.array([[[0,0], [0,0], [0,0]]])
+        self.pose_detection_keypoints = np.array([[[0, 0], [0, 0], [0, 0]]])
 
         self.model = YOLO(pose_detection_path)
 
@@ -204,15 +212,19 @@ class PoseWidget():
         while not self.stopped:
             if self.widget.grabbed:
                 self.widget_frame = self.widget.frame
-                result = self.model.track(self.widget_frame,
-                                          tracker="bytetrack.yaml",
-                                          imgsz=320,
-                                          classes=[0],
-                                          verbose=False)
+                result = self.model.track(
+                    self.widget_frame,
+                    tracker="bytetrack.yaml",
+                    imgsz=320,
+                    classes=[0],
+                    verbose=False,
+                )
 
                 self.pose_detection_score = self.countIDs(result)
 
-                self.pose_detection_data, self.pose_detection_keypoints = self.getResultData(result)
+                self.pose_detection_data, self.pose_detection_keypoints = (
+                    self.getResultData(result)
+                )
 
                 self.pose_detection_frame = result[0].plot()
                 self.widget.pose_detection_frame = self.pose_detection_frame
@@ -226,15 +238,13 @@ class PoseWidget():
     def stop(self):
         self.stopped = True
 
-    def countIDs(self,
-                 result):
+    def countIDs(self, result):
         counts = 0
         if result[0].boxes.id is not None:
             counts = max(result[0].boxes.id.int().cpu().tolist())
         return counts
 
-    def getResultData(self,
-                      result):
+    def getResultData(self, result):
         data = np.array([[0, 0, 0, 0, 0]])
         keypoints = np.array([[[0, 0], [0, 0], [0, 0]]])
 
@@ -255,15 +265,16 @@ class PoseWidget():
                     data = np.array([[identity, x, y, h, w]])
                     keypoints = np.array([[nose, left_eye, right_eye]])
                 else:
-                    data = np.append(data, np.array([[identity, x, y, h, w]]), axis = 0)
-                    keypoints = np.append(keypoints, np.array([[nose, left_eye, right_eye]]), axis = 0)
+                    data = np.append(data, np.array([[identity, x, y, h, w]]), axis=0)
+                    keypoints = np.append(
+                        keypoints, np.array([[nose, left_eye, right_eye]]), axis=0
+                    )
         return data, keypoints
 
-class DeepFaceWidget():
 
-    def __init__(self,
-                 widget: CameraWidget,
-                 database_path: str):
+class DeepFaceWidget:
+
+    def __init__(self, widget: CameraWidget, database_path: str):
 
         self.widget = widget
 
@@ -283,13 +294,14 @@ class DeepFaceWidget():
         while not self.stopped:
             if self.widget.grabbed:
                 self.widget_frame = self.widget.frame
-                dataframes = DeepFace.find(img_path = np.array(self.widget_frame),
-                                           db_path = self.database_path,
-                                           enforce_detection=False,
-                                           silent=True,
-                                           detector_backend = "yolov8",
-                                           distance_metric = "euclidean_l2"
-                                           )
+                dataframes = DeepFace.find(
+                    img_path=np.array(self.widget_frame),
+                    db_path=self.database_path,
+                    enforce_detection=False,
+                    silent=True,
+                    detector_backend="yolov8",
+                    distance_metric="euclidean_l2",
+                )
 
                 self.deepface_detections_data = self.getResultData(dataframes)
 
@@ -298,39 +310,38 @@ class DeepFaceWidget():
     def stop(self):
         self.stopped = True
 
-    def getResultData(self,
-                      dataframes):
+    def getResultData(self, dataframes):
         data = np.array([[0, 0, 0]])
         if len(dataframes) > 0:
-            for i,entry in enumerate(dataframes):
+            for i, entry in enumerate(dataframes):
                 if not entry.empty:
-                    identity = int(entry["identity"][0][len(database_path)+1:-6])
+                    identity = int(entry["identity"][0][len(database_path) + 1 : -6])
                     x = entry["source_x"][0]
                     y = entry["source_y"][0]
                     w = entry["source_w"][0]
                     h = entry["source_h"][0]
 
-                    center_x = int(x + w/2)
-                    center_y = int(y + h/2)
+                    center_x = int(x + w / 2)
+                    center_y = int(y + h / 2)
 
                     if i == 0:
                         data = np.array([[identity, center_x, center_y]])
 
                     else:
-                        data = np.append(data,[[identity, center_x, center_y]], axis = 0)
+                        data = np.append(data, [[identity, center_x, center_y]], axis=0)
 
         return data
 
+
 if __name__ == "__main__":
-    ports = [1]
+    ports = [0]
     resolution = [720, 1280]
     camera_fps = 30
 
     pose_detection_path = "models/detection/yolov8n-pose.pt"
     database_path = "./database"
 
-    imageShow = ImageShowWidget(ports,
-                                resolution,
-                                camera_fps,
-                                pose_detection_path,
-                                database_path)
+    imageShow = ImageShowWidget(
+        ports, resolution, camera_fps, pose_detection_path, database_path
+    )
+    imageShow.start()
