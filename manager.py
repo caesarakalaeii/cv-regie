@@ -99,6 +99,6 @@ class CV_Manager(object):
     def start_cam_widgets(self):
         cam_widget: CameraWidget
         for cam_widget in self.camera_widgets:
-            if not cam_widget.stopped:
+            if cam_widget.stopped:
                 self.l.info(f'Starting Camera {cam_widget.port}')
                 cam_widget.start()
