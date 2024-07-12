@@ -83,6 +83,8 @@ class CV_Manager(object):
                 self.l.info('Processing frame')
                 best_widget:CameraWidget = self.camera_widgets[best_feed]
                 best_frame = best_widget.frame
+                if best_frame is None:
+                    continue
                 boxes = best_widget.get_detection_bounds()
                 bounding_box = calculate_frame_box_static(boxes)
                 cropped_frame = get_processed_frame(bounding_box, best_frame)
