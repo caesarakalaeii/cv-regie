@@ -57,7 +57,7 @@ class CameraWidget:
         
         
         self.grabbed = False
-        self.thread = Thread(target=self.run)
+        self.thread = Thread(target=self.run, daemon=True)
         self.stopped = False
         
 
@@ -70,23 +70,28 @@ class CameraWidget:
     def run(self):
         time_start = timer()
         frame_counter = 0
-        while not self.stopped:
-            if self.grabbed:
-                
-                self.init_widgets()
-                
-                self.grabbed, self.frame = self.cap.read()
-                self.update_widgets()
-                frame_counter += 1
-                time_end = timer()
+        try:
+            while not self.stopped:
+                if self.grabbed:
+                    
+                    self.init_widgets()
+                    
+                    self.grabbed, self.frame = self.cap.read()
+                    self.update_widgets()
+                    frame_counter += 1
+                    time_end = timer()
 
-                if time_end - time_start > 1:
-                    self.fps = frame_counter
-                    time_start = timer()
-                    frame_counter = 0
+                    if time_end - time_start > 1:
+                        self.fps = frame_counter
+                        time_start = timer()
+                        frame_counter = 0
 
-            else:
-                self.stop()
+                else:
+                    self.stop()
+        except Exception as e:
+            self.l.error(e)
+            self.stop()
+            raise e
 
     def init_widgets(self):
         widget: DetectionWidget

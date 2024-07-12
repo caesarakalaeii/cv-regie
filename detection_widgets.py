@@ -52,11 +52,11 @@ class HumanWidget(DetectionWidget):
         self.l.info('Creating HumanWidget')
 
         self.model = YOLO(human_detection_path)
-
+        self.result = None
         self.widget_frame = None
         self.human_detection_frame = None
 
-        self.thread = Thread(target=self.run)
+        self.thread = Thread(target=self.run, daemon=True)
         self.stopped = False
 
     def start(self):
@@ -65,20 +65,25 @@ class HumanWidget(DetectionWidget):
         self.thread.start()
 
     def run(self):
-        while not self.stopped:
-            if self.widget_frame:
-                self.result = self.model.track(
-                    self.widget_frame,
-                    tracker="bytetrack.yaml",
-                    imgsz=320,
-                    classes=[0],
-                    verbose=False,
-                )
-                if len(self.result) != 0:
-                    self.detection = True
-                else:
-                    self.detection = False
+        try:
+            while not self.stopped:
+                if self.widget_frame:
+                    self.result = self.model.track(
+                        self.widget_frame,
+                        tracker="bytetrack.yaml",
+                        imgsz=320,
+                        classes=[0],
+                        verbose=False,
+                    )
+                    if len(self.result) != 0:
+                        self.detection = True
+                    else:
+                        self.detection = False
                 self.widget_frame = None
+        except Exception as e:
+            self.l.error(e)
+            self.stop()
+            raise e
                 
     def stop(self):
         self.stopped = True
@@ -119,13 +124,14 @@ class FaceWidget:
         
         self.l = l
         self.l.info('Creating FaceWidget')
+        self.result = None
 
         self.model = YOLO(face_detection_path)
 
         self.widget_frame = None
         self.face_detection_frame = None
 
-        self.thread = Thread(target=self.run)
+        self.thread = Thread(target=self.run, daemon=True)
         self.stopped = False
 
     def start(self):
@@ -133,20 +139,25 @@ class FaceWidget:
         self.thread.start()
 
     def run(self):
-        while not self.stopped:
-            if self.widget_frame:
-                self.result = self.model.track(
-                    self.widget_frame,
-                    tracker="bytetrack.yaml",
-                    imgsz=320,
-                    classes=[0],
-                    verbose=False,
-                )
-                if len(self.result) != 0:
-                    self.detection = True
-                else:
-                    self.detection = False
-                self.widget_frame = None
+        try:
+            while not self.stopped:
+                if self.widget_frame:
+                    self.result = self.model.track(
+                        self.widget_frame,
+                        tracker="bytetrack.yaml",
+                        imgsz=320,
+                        classes=[0],
+                        verbose=False,
+                    )
+                    if len(self.result) != 0:
+                        self.detection = True
+                    else:
+                        self.detection = False
+                    self.widget_frame = None
+        except Exception as e:
+            self.l.error(e)
+            self.stop()
+            raise e
                 
 
     def stop(self):
@@ -184,13 +195,14 @@ class DeepFaceWidget:
         self.database_path = database_path
 
         self.deepface_detections_data = [[], [], [], [], []]
+        self.result = None
         
         self.l = l
         self.l.info('Creating DeepFaceWidget')
 
         self.widget_frame = None
 
-        self.thread = Thread(target=self.run)
+        self.thread = Thread(target=self.run, daemon=True)
         self.stopped = False
 
     def start(self):
@@ -199,16 +211,21 @@ class DeepFaceWidget:
         self.thread.start()
 
     def run(self):
-        while not self.stopped:
-            if self.widget_frame:
-                self.result = DeepFace.find(
-                    img_path=np.array(self.widget_frame),
-                    db_path=self.database_path,
-                    enforce_detection=False,
-                    silent=True,
-                    detector_backend="yolov8",
-                    distance_metric="euclidean_l2",
-                )
+        try:
+            while not self.stopped:
+                if self.widget_frame:
+                    self.result = DeepFace.find(
+                        img_path=np.array(self.widget_frame),
+                        db_path=self.database_path,
+                        enforce_detection=False,
+                        silent=True,
+                        detector_backend="yolov8",
+                        distance_metric="euclidean_l2",
+                    )
+        except Exception as e:
+            self.l.error(e)
+            self.stop()
+            raise e
 
     def stop(self):
         self.stopped = True

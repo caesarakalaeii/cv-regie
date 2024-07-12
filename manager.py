@@ -60,7 +60,7 @@ class CV_Manager(object):
             raise NotImplementedError("Virtual Webcam not yet supported")
         else:
             raise ValueError("Mode not recognized")
-        self.thread = Thread(target=self.loop)
+        self.thread = Thread(target=self.loop, daemon=True)
         self.running = False
         
     def run(self):
@@ -71,22 +71,27 @@ class CV_Manager(object):
             
             
     def loop(self):
-        while self.running:
-            self.l.info('Calculating rankings')
-            cam_widget: CameraWidget
-            for i, cam_widget in enumerate(self.camera_widgets):
-                self.ranking[i](cam_widget.get_ranking())
+        try:
+            while self.running:
+                self.l.info('Calculating rankings')
+                cam_widget: CameraWidget
+                for i, cam_widget in enumerate(self.camera_widgets):
+                    self.ranking[i](cam_widget.get_ranking())
+                    
+                best_feed = max(enumerate(self.ranking),key=lambda x: x[1])[0] #find index of highest ranking
+                self.l.info(f'Best feed is feed{best_feed} with {self.ranking[best_feed]}')
                 
-            best_feed = max(enumerate(self.ranking),key=lambda x: x[1])[0] #find index of highest ranking
-            self.l.info(f'Best feed is feed{best_feed} with {self.ranking[best_feed]}')
-            
-            self.l.info('Processing frame')
-            best_widget:CameraWidget = self.camera_widgets[best_feed]
-            best_frame = best_widget.frame
-            boxes = best_widget.get_detection_bounds()
-            bounding_box = calculate_frame_box_static(boxes)
-            cropped_frame = get_processed_frame(bounding_box, best_frame)
-            self.output.update_frame(cropped_frame)
+                self.l.info('Processing frame')
+                best_widget:CameraWidget = self.camera_widgets[best_feed]
+                best_frame = best_widget.frame
+                boxes = best_widget.get_detection_bounds()
+                bounding_box = calculate_frame_box_static(boxes)
+                cropped_frame = get_processed_frame(bounding_box, best_frame)
+                self.output.update_frame(cropped_frame)
+        except Exception as e:
+            self.l.error(e)
+            self.running = False
+            raise e
             
             
             
