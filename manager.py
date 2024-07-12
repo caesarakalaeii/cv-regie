@@ -59,13 +59,18 @@ class CV_Manager(object):
             raise NotImplementedError("Virtual Webcam not yet supported")
         else:
             raise ValueError("Mode not recognized")
-        self.thread = Thread(target=self.loop, daemon=True)
+        self.thread = Thread(target=self.loop)
         self.running = False
         
     def run(self):
         if not self.running:
             self.running = True
             self.start_cam_widgets()
+            if self.debug:
+                debug:ImageShowWidget
+                for debug in self.debug_outputs:
+                    debug.start()
+            self.output.start()
             self.thread.start()
             
             
@@ -83,7 +88,7 @@ class CV_Manager(object):
                 self.l.info('Processing frame')
                 best_widget:CameraWidget = self.camera_widgets[best_feed]
                 best_frame = best_widget.frame
-                if best_frame is None:
+                if best_frame is None or self.ranking[best_feed] == 0:
                     continue
                 boxes = best_widget.get_detection_bounds()
                 bounding_box = calculate_frame_box_static(boxes)

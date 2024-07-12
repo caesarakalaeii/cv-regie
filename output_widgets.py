@@ -37,17 +37,18 @@ class ImageShowWidget(OutputWiget):
 
     def start(self):
         self.stopped = False
-        
         self.thread.start()
 
     def run(self):
 
         while not self.stopped:
             
-            if self.frame != None:
-                cv.imshow(self.window_title, self.frame)
+            if self.frame is None:
+                continue
+            
+            cv.imshow(self.window_title, self.frame)
 
-                # print(f"Port:{widget.port} - fps:{widget.fps}")
+            # print(f"Port:{widget.port} - fps:{widget.fps}")
 
             if cv.waitKey(1) == ord("q"):
                 self.stop()

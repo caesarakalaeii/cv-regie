@@ -18,16 +18,20 @@ class DetectionWidget (ABC):
     widget_type = "Base"
     
     def start(self):
-        raise NotImplementedError()
+        # empty abstract class method
+        pass
     
     def stop(self):
-        raise NotImplementedError()
+        # empty abstract class method
+        pass
     
     def count_ids(self):
-        raise NotImplementedError()
+        # empty abstract class method
+        pass
 
     def get_result_data(self):
-        raise NotImplementedError()
+        # empty abstract class method
+        pass
     
     def update_frame(self, frame):
         self.widget_frame = frame
@@ -56,13 +60,14 @@ class HumanWidget(DetectionWidget):
         self.widget_frame = None
         self.human_detection_frame = None
 
-        self.thread = Thread(target=self.run, daemon=True)
+        self.thread = Thread(target=self.run)
         self.stopped = True
 
     def start(self):
         if self.stopped:
             self.l.info('Starting HumanWidget')
             self.stopped = False
+            self.thread = Thread(target=self.run)
             self.thread.start()
 
     def run(self):
@@ -136,13 +141,14 @@ class FaceWidget:
         self.widget_frame = None
         self.face_detection_frame = None
 
-        self.thread = Thread(target=self.run, daemon=True)
+        self.thread = Thread(target=self.run)
         self.stopped = True
 
     def start(self):
         if self.stopped:
             self.l.info('Starting FaceWidget')
             self.stopped = False
+            self.thread = Thread(target=self.run)
             self.thread.start()
 
     def run(self):
@@ -214,13 +220,14 @@ class DeepFaceWidget:
 
         self.widget_frame = None
 
-        self.thread = Thread(target=self.run, daemon=True)
+        self.thread = Thread(target=self.run)
         self.stopped = True
 
     def start(self):
         if self.stopped:
             self.l.info('Starting DeepFaceWidget')
             self.stopped = False
+            self.thread = Thread(target=self.run)
             self.thread.start()
 
     def run(self):

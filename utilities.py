@@ -40,6 +40,13 @@ def identity_from_string(string: str):
         return string.split("database\\")[1].split("\\")[0]
     return string.split("database/")[1].split("/")[0]
 
+def os_sensitive_backslashes(string: str):
+    if os.name == "nt":
+        print(f'Detected Windows System, attempting conversion from path {string}')
+        return string.replace("/", "\\")
+    print(f'Detected Unix System, attempting conversion from path {string}')
+    return string.replace("\\", "/")
+
 
 def pad_to_16by9(box: Box, target_shape=(16, 9)) -> Box:
     box_width = box.width()
@@ -124,5 +131,8 @@ def get_processed_frame(
         frame = frame[
             box.y1 : box.y2, box.x1 : box.x2
         ]
-
-        return cv.resize(frame, target_shape, interpolation=interpolation)
+        try:
+            return cv.resize(frame, target_shape, interpolation=interpolation)
+        except Exception as e:
+            print(e)
+            return frame
