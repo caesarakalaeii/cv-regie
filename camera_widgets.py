@@ -58,25 +58,24 @@ class CameraWidget:
         
         self.grabbed = False
         self.thread = Thread(target=self.run, daemon=True)
-        self.stopped = False
+        self.stopped = True
         
 
     def start(self):
         self.l.passing(f'Starting CameraWidget {self.port}')
-        self.grabbed, self.frame = self.cap.read()
-        if self.grabbed:
-            self.thread.start()
+        self.stopped = False
+        self.thread.start()
 
     def run(self):
         time_start = timer()
         frame_counter = 0
         try:
             while not self.stopped:
+                self.grabbed, self.frame = self.cap.read()
                 if self.grabbed:
                     
                     self.init_widgets()
                     
-                    self.grabbed, self.frame = self.cap.read()
                     self.update_widgets()
                     frame_counter += 1
                     time_end = timer()
