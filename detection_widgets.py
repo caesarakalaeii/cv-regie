@@ -60,9 +60,10 @@ class HumanWidget(DetectionWidget):
         self.stopped = True
 
     def start(self):
-        self.l.info('Starting HumanWidget')
-        self.stopped = False
-        self.thread.start()
+        if self.stopped:
+            self.l.info('Starting HumanWidget')
+            self.stopped = False
+            self.thread.start()
 
     def run(self):
         try:
@@ -139,9 +140,10 @@ class FaceWidget:
         self.stopped = True
 
     def start(self):
-        self.l.info('Starting FaceWidget')
-        self.stopped = False
-        self.thread.start()
+        if self.stopped:
+            self.l.info('Starting FaceWidget')
+            self.stopped = False
+            self.thread.start()
 
     def run(self):
         try:
@@ -216,9 +218,10 @@ class DeepFaceWidget:
         self.stopped = True
 
     def start(self):
-        self.l.info('Starting DeepFaceWidget')
-        self.stopped = False
-        self.thread.start()
+        if self.stopped:
+            self.l.info('Starting DeepFaceWidget')
+            self.stopped = False
+            self.thread.start()
 
     def run(self):
         try:
