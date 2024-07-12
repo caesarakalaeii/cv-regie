@@ -96,7 +96,8 @@ class HumanWidget(DetectionWidget):
 
     def get_result_data(self):
         data = []
-
+        if self.result == None:
+            return 0
         if self.result[0].boxes.id is not None:
             for i, identity in enumerate(self.result[0].boxes.id):
 
@@ -165,6 +166,8 @@ class FaceWidget:
 
     def count_ids(self):
         counts = 0
+        if self.result == None:
+            return 0
         if self.result[0].boxes.id is not None:
             counts = max(self.result[0].boxes.id.int().cpu().tolist())
         return counts

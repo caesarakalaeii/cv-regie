@@ -1,6 +1,4 @@
 from abc import ABC
-from detection_widgets import DetectionWidget
-from utilities import calculate_frame_box_static
 import numpy as np
 from logger import Logger
 import cv2 as cv

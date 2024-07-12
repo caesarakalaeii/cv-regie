@@ -1,6 +1,5 @@
-from widgets import CameraWidget
+from camera_widgets import CameraWidget
 from output_widgets import ImageShowWidget
-from detection_widgets import DetectionWidget
 from utilities import calculate_frame_box_static, get_processed_frame
 from threading import Thread
 from logger import Logger

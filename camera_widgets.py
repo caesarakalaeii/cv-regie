@@ -115,6 +115,7 @@ class CameraWidget:
         self.cap.release()
 
     def get_ranking(self):
+        
         human_detection_widget:DetectionWidget = self.widgets[0]
         persons = human_detection_widget.count_ids()
         face_detection_widget:DetectionWidget = self.widgets[1]
