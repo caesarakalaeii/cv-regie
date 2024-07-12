@@ -51,6 +51,7 @@ class CV_Manager(object):
                 self.debug_outputs[cam].append(ImageShowWidget(f'Camera {cam} Raw', l))
                                 
             self.ranking.append(0)
+        self.l.info(self.debug_outputs)
         if output_mode == MODES.CV:
             self.l.passing('Mode is CV, Creating Output Widget')
             self.output = ImageShowWidget('Output', l)
