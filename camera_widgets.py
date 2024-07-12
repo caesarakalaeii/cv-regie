@@ -85,9 +85,6 @@ class CameraWidget:
                         self.fps = frame_counter
                         time_start = timer()
                         frame_counter = 0
-
-                else:
-                    self.stop()
         except Exception as e:
             self.l.error(e.with_traceback(e.__traceback__))
             self.stop()

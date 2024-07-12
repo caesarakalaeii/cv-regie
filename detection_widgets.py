@@ -91,14 +91,16 @@ class HumanWidget(DetectionWidget):
 
     def count_ids(self):
         counts = 0
+        if self.result is None:
+            return 0
         if self.result[0].boxes.id is not None:
             counts = max(self.result[0].boxes.id.int().cpu().tolist())
         return counts
 
     def get_result_data(self):
         data = []
-        if self.result == None:
-            return 0
+        if self.result is None:
+            return data
         if self.result[0].boxes.id is not None:
             for i, identity in enumerate(self.result[0].boxes.id):
 
@@ -169,7 +171,7 @@ class FaceWidget:
 
     def count_ids(self):
         counts = 0
-        if self.result == None:
+        if self.result is None:
             return 0
         if self.result[0].boxes.id is not None:
             counts = max(self.result[0].boxes.id.int().cpu().tolist())
@@ -177,6 +179,8 @@ class FaceWidget:
 
     def get_result_data(self)-> list[Box]:
         data = []
+        if self.result is None:
+            return data
         if self.result[0].boxes.id is not None:
             for i, identity in enumerate(self.result[0].boxes.id):
                 x, y, w, h = self.result[0].boxes.xywh[i]
@@ -240,6 +244,8 @@ class DeepFaceWidget:
 
     def get_result_data(self):
         data = []
+        if self.result is None:
+            return data
 
         if len(self.result) > 0:
             for i, entry in enumerate(self.result):
