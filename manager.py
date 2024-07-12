@@ -75,7 +75,7 @@ class CV_Manager(object):
                 self.l.info('Calculating rankings')
                 cam_widget: CameraWidget
                 for i, cam_widget in enumerate(self.camera_widgets):
-                    self.ranking[i](cam_widget.get_ranking())
+                    self.ranking[i]=cam_widget.get_ranking()
                     
                 best_feed = max(enumerate(self.ranking),key=lambda x: x[1])[0] #find index of highest ranking
                 self.l.info(f'Best feed is feed{best_feed} with {self.ranking[best_feed]}')
