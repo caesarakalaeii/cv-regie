@@ -7,16 +7,20 @@ from threading import Thread
 class OutputWiget(ABC):
     
     def update_frame(self, frame):
-        raise NotImplementedError()
+        # empty abstract class method
+        pass
     
     def start(self):
-        raise NotImplementedError()
+        # empty abstract class method
+        pass
     
     def stop(self):
-        raise NotImplementedError()
+        # empty abstract class method
+        pass
         
     def loop(self):
-        raise NotImplementedError()
+        # empty abstract class method
+        pass
     
 class ImageShowWidget(OutputWiget):
     "Wiget to show CameraFeed"
