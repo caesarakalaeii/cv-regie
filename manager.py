@@ -1,5 +1,5 @@
 from camera_widgets import CameraWidget
-from output_widgets import ImageShowWidget
+from output_widgets import ImageShowWidget, OutputWiget
 from utilities import calculate_frame_box_static, get_processed_frame
 from threading import Thread
 from logger import Logger
@@ -69,7 +69,7 @@ class CV_Manager(object):
             self.running = True
             self.start_cam_widgets()
             if self.debug:
-                debug:ImageShowWidget
+                debug:OutputWiget
                 for debugs in self.debug_outputs.values():
                     for debug in debugs:
                         debug.start()
@@ -84,6 +84,10 @@ class CV_Manager(object):
                 cam_widget: CameraWidget
                 for i, cam_widget in enumerate(self.camera_widgets):
                     self.ranking[i]=cam_widget.get_ranking()
+                    if self.debug:
+                        debug:OutputWiget
+                        for debug in self.debug_outputs[i]:
+                            debug.update_frame(cam_widget.frame)
                     
                 best_feed = max(enumerate(self.ranking),key=lambda x: x[1])[0] #find index of highest ranking
                 self.l.info(f'Best feed is feed{best_feed} with {self.ranking[best_feed]}')
