@@ -5,9 +5,11 @@ import cv2 as cv
 from threading import Thread
 
 class OutputWiget(ABC):
+    frame: np.ndarray
+    
     
     def update_frame(self, frame):
-        raise NotImplementedError()
+        self.frame = frame
 
     
     def start(self):
@@ -65,6 +67,4 @@ class ImageShowWidget(OutputWiget):
         cv.destroyAllWindows()
         
        
-    def update_frame(self, frame):
-        self.widget_frame = frame
-    
+  
