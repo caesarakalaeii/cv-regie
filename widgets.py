@@ -111,9 +111,9 @@ class CameraWidget:
 
     def get_ranking(self):
         human_detection_widget:DetectionWidget = self.widgets[0]
-        persons = human_detection_widget.countIDs()
+        persons = human_detection_widget.count_ids()
         face_detection_widget:DetectionWidget = self.widgets[1]
-        faces = face_detection_widget.countIDs()
+        faces = face_detection_widget.count_ids()
         
         return calculate_ranking(
             self.frame.shape, persons, faces
