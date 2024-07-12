@@ -38,12 +38,12 @@ class ImageShowWidget(OutputWiget):
         self.frame = None
         self.thread = Thread(target=self.run)
         
-    @override
+   
     def start(self):
         self.stopped = False
         self.thread.start()
 
-    @override
+    
     def run(self):
         self.l.passingblue("Starting output widget")
 
@@ -59,13 +59,13 @@ class ImageShowWidget(OutputWiget):
 
             if cv.waitKey(1) == ord("q"):
                 self.stop()
-    @override
+    
     def stop(self):
         self.l.warning('Stopping Output Widget')
         self.stopped = True
         cv.destroyAllWindows()
         
-    @override    
+       
     def update_frame(self, frame):
         self.widget_frame = frame
     
