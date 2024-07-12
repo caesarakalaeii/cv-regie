@@ -109,7 +109,7 @@ class HumanWidget(DetectionWidget):
             for i, identity in enumerate(self.result[0].boxes.id):
 
                 x, y, w, h = self.result[0].boxes.xywh[i]
-                data.append([[int(identity)], [int(x)], [int(y)], [int(h)], [int(w)]])
+                data.append(Box(x,y,x+w,y+h))
 
         return data
     
@@ -193,7 +193,7 @@ class FaceWidget:
             for i, identity in enumerate(self.result[0].boxes.id):
                 x, y, w, h = self.result[0].boxes.xywh[i]
 
-                data.append(Box(x,y,h,w))
+                data.append(Box(x,y,x+w,y+h))
         return data
     
     def update_frame(self, frame):
@@ -266,7 +266,7 @@ class DeepFaceWidget:
                     y = entry["source_y"][0]
                     w = entry["source_w"][0]
                     h = entry["source_h"][0]
-                    data.append(Box([x], [y], [h], [w]))
+                    data.append(Box(x,y,x+w,y+h))
         return data
     
     def update_frame(self, frame):
