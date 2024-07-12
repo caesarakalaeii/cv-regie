@@ -94,6 +94,8 @@ class HumanWidget(DetectionWidget):
                 
     def stop(self):
         self.stopped = True
+        self.l.warning(f'Stopping {self.widget_type}')
+        
 
     def count_ids(self):
         counts = 0
@@ -176,6 +178,8 @@ class FaceWidget:
 
     def stop(self):
         self.stopped = True
+        self.l.warning(f'Stopping {self.widget_type}')
+        
 
     def count_ids(self):
         counts = 0
@@ -251,6 +255,7 @@ class DeepFaceWidget:
 
     def stop(self):
         self.stopped = True
+        self.l.warning(f'Stopping {self.widget_type}')
 
     def get_result_data(self):
         data = []

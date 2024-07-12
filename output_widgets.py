@@ -40,6 +40,7 @@ class ImageShowWidget(OutputWiget):
         self.thread.start()
 
     def run(self):
+        self.l.passingblue("Starting output widget")
 
         while not self.stopped:
             
@@ -54,6 +55,7 @@ class ImageShowWidget(OutputWiget):
                 self.stop()
 
     def stop(self):
+        self.l.warning('Stopping Output Widget')
         self.stopped = True
         cv.destroyAllWindows()
     

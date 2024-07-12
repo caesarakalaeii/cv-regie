@@ -63,6 +63,8 @@ class CV_Manager(object):
         self.running = False
         
     def run(self):
+        self.l.passingblue("Starting manager")
+        
         if not self.running:
             self.running = True
             self.start_cam_widgets()

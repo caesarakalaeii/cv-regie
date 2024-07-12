@@ -108,6 +108,8 @@ class CameraWidget:
     def stop(self):
         widget: DetectionWidget
         self.stopped = True
+        self.l.warning(f'Stopping CameraWidget {self.port}')
+        
         for widget in self.widgets:
             if not widget.stopped:
                 widget.stop()
