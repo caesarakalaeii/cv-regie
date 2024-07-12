@@ -89,7 +89,7 @@ class CameraWidget:
                 else:
                     self.stop()
         except Exception as e:
-            self.l.error(e.with_traceback())
+            self.l.error(e.with_traceback(e.__traceback__))
             self.stop()
             raise e
 

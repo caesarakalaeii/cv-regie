@@ -67,21 +67,22 @@ class HumanWidget(DetectionWidget):
     def run(self):
         try:
             while not self.stopped:
-                if self.widget_frame != None:
-                    self.result = self.model.track(
-                        self.widget_frame,
-                        tracker="bytetrack.yaml",
-                        imgsz=320,
-                        classes=[0],
-                        verbose=False,
-                    )
-                    if len(self.result) != 0:
-                        self.detection = True
-                    else:
-                        self.detection = False
+                if self.widget_frame is None:
+                    continue
+                self.result = self.model.track(
+                    self.widget_frame,
+                    tracker="bytetrack.yaml",
+                    imgsz=320,
+                    classes=[0],
+                    verbose=False,
+                )
+                if len(self.result) != 0:
+                    self.detection = True
+                else:
+                    self.detection = False
                 self.widget_frame = None
         except Exception as e:
-            self.l.error(e.with_traceback())
+            self.l.error(e.with_traceback(e.__traceback__))
             self.stop()
             raise e
                 
@@ -143,21 +144,22 @@ class FaceWidget:
     def run(self):
         try:
             while not self.stopped:
-                if self.widget_frame != None:
-                    self.result = self.model.track(
-                        self.widget_frame,
-                        tracker="bytetrack.yaml",
-                        imgsz=320,
-                        classes=[0],
-                        verbose=False,
-                    )
-                    if len(self.result) != 0:
-                        self.detection = True
-                    else:
-                        self.detection = False
-                    self.widget_frame = None
+                if self.widget_frame is None:
+                    continue
+                self.result = self.model.track(
+                    self.widget_frame,
+                    tracker="bytetrack.yaml",
+                    imgsz=320,
+                    classes=[0],
+                    verbose=False,
+                )
+                if len(self.result) != 0:
+                    self.detection = True
+                else:
+                    self.detection = False
+                self.widget_frame = None
         except Exception as e:
-            self.l.error(e.with_traceback())
+            self.l.error(e.with_traceback(e.__traceback__))
             self.stop()
             raise e
                 
@@ -217,18 +219,19 @@ class DeepFaceWidget:
     def run(self):
         try:
             while not self.stopped:
-                if self.widget_frame != None:
-                    self.result = DeepFace.find(
-                        img_path=np.array(self.widget_frame),
-                        db_path=self.database_path,
-                        enforce_detection=False,
-                        silent=True,
-                        detector_backend="yolov8",
-                        distance_metric="euclidean_l2",
-                    )
-                    self.widget_frame = None
+                if self.widget_frame is None:
+                    continue
+                self.result = DeepFace.find(
+                    img_path=np.array(self.widget_frame),
+                    db_path=self.database_path,
+                    enforce_detection=False,
+                    silent=True,
+                    detector_backend="yolov8",
+                    distance_metric="euclidean_l2",
+                )
+                self.widget_frame = None
         except Exception as e:
-            self.l.error(e.with_traceback())
+            self.l.error(e.with_traceback(e.__traceback__))
             self.stop()
             raise e
 
