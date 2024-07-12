@@ -1,5 +1,4 @@
 from abc import ABC
-from typing import override
 import numpy as np
 from logger import Logger
 import cv2 as cv
