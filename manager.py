@@ -88,7 +88,7 @@ class CV_Manager(object):
                 cropped_frame = get_processed_frame(bounding_box, best_frame)
                 self.output.update_frame(cropped_frame)
         except Exception as e:
-            self.l.error(e)
+            self.l.error(e.with_traceback())
             self.running = False
             raise e
             

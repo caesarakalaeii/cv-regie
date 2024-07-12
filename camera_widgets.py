@@ -46,9 +46,9 @@ class CameraWidget:
         self.cap.set(cv.CAP_PROP_FPS, self.camera_fps)
 
         
-        human_detection_widget = HumanWidget(human_detection_path)
-        face_detection_widget = FaceWidget(face_detection_path)
-        deepface_detection_widget = DeepFaceWidget(database_path)
+        human_detection_widget = HumanWidget(human_detection_path,l)
+        face_detection_widget = FaceWidget(face_detection_path,l)
+        deepface_detection_widget = DeepFaceWidget(database_path,l)
         self.widgets = [
             human_detection_widget,
             face_detection_widget,
@@ -89,7 +89,7 @@ class CameraWidget:
                 else:
                     self.stop()
         except Exception as e:
-            self.l.error(e)
+            self.l.error(e.with_traceback())
             self.stop()
             raise e
 

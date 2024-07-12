@@ -57,7 +57,7 @@ class HumanWidget(DetectionWidget):
         self.human_detection_frame = None
 
         self.thread = Thread(target=self.run, daemon=True)
-        self.stopped = False
+        self.stopped = True
 
     def start(self):
         self.l.info('Starting HumanWidget')
@@ -81,7 +81,7 @@ class HumanWidget(DetectionWidget):
                         self.detection = False
                 self.widget_frame = None
         except Exception as e:
-            self.l.error(e)
+            self.l.error(e.with_traceback())
             self.stop()
             raise e
                 
@@ -133,7 +133,7 @@ class FaceWidget:
         self.face_detection_frame = None
 
         self.thread = Thread(target=self.run, daemon=True)
-        self.stopped = False
+        self.stopped = True
 
     def start(self):
         self.l.info('Starting FaceWidget')
@@ -156,7 +156,7 @@ class FaceWidget:
                         self.detection = False
                     self.widget_frame = None
         except Exception as e:
-            self.l.error(e)
+            self.l.error(e.with_traceback())
             self.stop()
             raise e
                 
@@ -206,7 +206,7 @@ class DeepFaceWidget:
         self.widget_frame = None
 
         self.thread = Thread(target=self.run, daemon=True)
-        self.stopped = False
+        self.stopped = True
 
     def start(self):
         self.l.info('Starting DeepFaceWidget')
@@ -226,7 +226,7 @@ class DeepFaceWidget:
                         distance_metric="euclidean_l2",
                     )
         except Exception as e:
-            self.l.error(e)
+            self.l.error(e.with_traceback())
             self.stop()
             raise e
 
