@@ -67,7 +67,7 @@ class HumanWidget(DetectionWidget):
     def run(self):
         try:
             while not self.stopped:
-                if self.widget_frame:
+                if self.widget_frame != None:
                     self.result = self.model.track(
                         self.widget_frame,
                         tracker="bytetrack.yaml",
@@ -143,7 +143,7 @@ class FaceWidget:
     def run(self):
         try:
             while not self.stopped:
-                if self.widget_frame:
+                if self.widget_frame != None:
                     self.result = self.model.track(
                         self.widget_frame,
                         tracker="bytetrack.yaml",
@@ -217,7 +217,7 @@ class DeepFaceWidget:
     def run(self):
         try:
             while not self.stopped:
-                if self.widget_frame:
+                if self.widget_frame != None:
                     self.result = DeepFace.find(
                         img_path=np.array(self.widget_frame),
                         db_path=self.database_path,
@@ -226,6 +226,7 @@ class DeepFaceWidget:
                         detector_backend="yolov8",
                         distance_metric="euclidean_l2",
                     )
+                    self.widget_frame = None
         except Exception as e:
             self.l.error(e.with_traceback())
             self.stop()

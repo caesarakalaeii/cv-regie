@@ -44,7 +44,7 @@ class ImageShowWidget(OutputWiget):
 
         while not self.stopped:
             
-            if self.frame:
+            if self.frame != None:
                 cv.imshow(self.window_title, self.frame)
 
                 # print(f"Port:{widget.port} - fps:{widget.fps}")
