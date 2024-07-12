@@ -47,3 +47,4 @@ if __name__ == '__main__':
         l = Logger(True)
         )
     manager.run()
+    manager.start_image_show_no_threading()

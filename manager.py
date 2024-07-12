@@ -108,7 +108,15 @@ class CV_Manager(object):
             raise e
             
             
-            
+    def start_image_show_no_threading(self):
+        running = True
+        while running:
+            outputs: list[OutputWiget]
+            for outputs in self.debug_outputs.values():
+                for output in outputs:
+                    output.show_image()
+                    
+            self.output.show_image()
             
                 
     def start_cam_widgets(self):

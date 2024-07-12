@@ -49,17 +49,19 @@ class ImageShowWidget(OutputWiget):
         self.l.passingblue("Starting output widget")
 
         while not self.stopped:
-            
-            if self.frame is None:
+            self.show_image()
+       
+    def show_image(self):     
+        if self.frame is None:
                 #self.l.info("no frame recieved")
-                continue
+                return
             
-            cv.imshow(self.window_title, self.frame)
+        cv.imshow(self.window_title, self.frame)
 
-            # print(f"Port:{widget.port} - fps:{widget.fps}")
+        # print(f"Port:{widget.port} - fps:{widget.fps}")
 
-            if cv.waitKey(1) == ord("q"):
-                self.stop()
+        if cv.waitKey(1) == ord("q"):
+            self.stop()
     
     def stop(self):
         self.l.warning('Stopping Output Widget')
