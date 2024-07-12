@@ -5,6 +5,7 @@ module comprised of utility functions, manly meant for static methods that provi
 import json
 import os
 from deepface import DeepFace
+import cv2 as cv
 import numpy as np
 
 
@@ -165,9 +166,44 @@ def get_amount_amount_of_faces(persons: list[Person]):
         return 0, faces
     for person in persons:
         identity = get_identity(person)
-        if identity is "":
+        if identity == "":
             continue
         if identity in faces:
             continue
         faces.append(identity)
     return len(faces), faces
+
+
+def calculate_frame_box_static(boxes: list[Box]) -> Box:
+        lowest_x = 99999
+        highest_x = 0
+        lowest_y = 99999
+        highest_y = 0
+
+        for box in boxes:
+            if box.x1 < lowest_x:
+                lowest_x = box.x1
+            if box.x2 > highest_x:
+                highest_x = box.x2
+            if box.y1 < lowest_y:
+                lowest_y = box.y1
+            if box.y2 > highest_y:
+                highest_y = box.y2
+
+        box = Box(lowest_x, lowest_y, highest_x, highest_y)
+        box = pad_to_16by9(box, target_shape=(16, 9))
+
+        return box
+    
+def get_processed_frame(
+        box:Box, frame:np.ndarray, interpolation=cv.INTER_LANCZOS4, target_shape=(1280, 720)
+    ) -> np.ndarray:
+        """
+        call with bounding box to get the desired frame
+        Make sure box is 16:9 using pad_to_16by9 or calculate_frame_box_static first
+        """
+        frame = frame[
+            box.y1 : box.y2, box.x1 : box.x2
+        ]
+
+        return cv.resize(frame, target_shape, interpolation=interpolation)

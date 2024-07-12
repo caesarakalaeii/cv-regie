@@ -5,21 +5,20 @@ from utilities import pad_to_16by9, Box
 
 
 class ProcessedFrame(object):
+    
+    '''
+    DEPRECATED DO NOT USE, will be removed soon
+    '''
 
     persons: list[Person]
     frame: np.ndarray
     last_box: Box
 
-    __frame_count: int
-    __target_box: Box
-
     def __init__(self) -> None:
         self.persons = []
         self.frame = None
         self.last_box = None
-        self.__frame_count = 0
-        self.__target_box = None
-        pass
+        raise DeprecationWarning('ProcessedFrame is deprecated and will be reemoved soon')
 
     def add_person(self, person: Person) -> bool:
         if person in self.persons:
@@ -63,48 +62,9 @@ class ProcessedFrame(object):
     def update_box(self, box: Box) -> None:
         self.last_box = box
 
-    def calculate_frame_box_static(self) -> Box:
-        lowest_x = 99999
-        highest_x = 0
-        lowest_y = 99999
-        highest_y = 0
+    
 
-        for person in self.persons:
-            if person.box.x1 < lowest_x:
-                lowest_x = person.box.x1
-            if person.box.x2 > highest_x:
-                highest_x = person.box.x2
-            if person.box.y1 < lowest_y:
-                lowest_y = person.box.y1
-            if person.box.y2 > highest_y:
-                highest_y = person.box.y2
+    
 
-        box = Box(lowest_x, lowest_y, highest_x, highest_y)
-        box = pad_to_16by9(box, target_shape=(16, 9))
+    
 
-        return box
-
-    def calculate_frame_box_rubber_band(self) -> None:
-        """
-        Might be implemented at a later point
-        """
-        raise NotImplementedError
-
-
-        # self.__target_box = self.calculate_frame_box_static()
-        # delta_x1 = self.__target_box.x1 - self.last_box.x1
-        # delta_y1 = self.__target_box.y1 - self.last_box.y1
-        # delta_x2 = self.__target_box.x2 - self.last_box.x2
-        # delta_y2 = self.__target_box.y2 - self.last_box.y2
-
-    def get_processed_frame(
-        self, interpolation=cv.INTER_LANCZOS4, target_shape=(1280, 720)
-    ) -> np.ndarray:
-        """
-        call after updates and box calculations, will return new frame
-        """
-        frame = self.frame[
-            self.last_box.y1 : self.last_box.y2, self.last_box.x1 : self.last_box.x2
-        ]
-
-        return cv.resize(frame, target_shape, interpolation=interpolation)

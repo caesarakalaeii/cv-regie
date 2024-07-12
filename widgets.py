@@ -4,10 +4,11 @@ Created on Tue May 21 10:04:30 2024
 
 @author: Wittke
 """
-from utilities import identity_from_string, calculate_ranking, pad_to_16by9, Box
+from utilities import calculate_ranking
 from detection_widgets import HumanWidget, DeepFaceWidget, FaceWidget, DetectionWidget
 from threading import Thread
 import cv2 as cv
+from logger import Logger
 from timeit import default_timer as timer
 
 
@@ -17,46 +18,51 @@ from timeit import default_timer as timer
 
 class CameraWidget:
     
-    widgets: [DetectionWidget]
+    widgets: list[DetectionWidget]
 
     def __init__(
         self,
         port: int,
-        resolution: (int, int),
+        resolution: list[int, int],
         camera_fps: int,
         human_detection_path: str,
         face_detection_path: str,
         database_path,
+        l= Logger()
     ):
 
+        
         self.port = port
         self.resolution = resolution
         self.camera_fps = camera_fps
-
+        self.l = l
         self.frame = None
         self.frame_counter = 0
         self.fps = 0
-
+        self.l.passing(f'Creating CameraWidget {self.port}')
         self.cap = cv.VideoCapture(self.port)
         self.cap.set(cv.CAP_PROP_FRAME_WIDTH, self.resolution[1])
         self.cap.set(cv.CAP_PROP_FRAME_HEIGHT, self.resolution[0])
         self.cap.set(cv.CAP_PROP_FPS, self.camera_fps)
 
-        self.grabbed = False
-
-        self.thread = Thread(target=self.run)
-        self.stopped = False
-        human_detection_widget = HumanWidget(self, human_detection_path)
-        face_detection_widget = FaceWidget(self, face_detection_path)
-        deepface_detection_widget = DeepFaceWidget(self, database_path)
+        
+        human_detection_widget = HumanWidget(human_detection_path)
+        face_detection_widget = FaceWidget(face_detection_path)
+        deepface_detection_widget = DeepFaceWidget(database_path)
         self.widgets = [
             human_detection_widget,
             face_detection_widget,
             deepface_detection_widget
             ]
         
+        
+        self.grabbed = False
+        self.thread = Thread(target=self.run)
+        self.stopped = False
+        
 
     def start(self):
+        self.l.passing(f'Starting CameraWidget {self.port}')
         self.grabbed, self.frame = self.cap.read()
         if self.grabbed:
             self.thread.start()
@@ -83,16 +89,20 @@ class CameraWidget:
                 self.stop()
 
     def init_widgets(self):
+        widget: DetectionWidget
         for widget in self.widgets:
-            if not widget.stopped:
+            if widget.stopped:
+                self.l.passing(f'Starting DetectionWidget {widget.widget_type} for Camera {self.port}')
                 widget.start()
     
     def update_widgets(self):
+        widget: DetectionWidget
         for widget in self.widgets:
             if not widget.stopped:
-                widget.update(self.frame)
+                widget.update_frame(self.frame)
     
     def stop(self):
+        widget: DetectionWidget
         self.stopped = True
         for widget in self.widgets:
             if not widget.stopped:
@@ -100,32 +110,20 @@ class CameraWidget:
         self.cap.release()
 
     def get_ranking(self):
+        human_detection_widget:DetectionWidget = self.widgets[0]
+        persons = human_detection_widget.countIDs()
+        face_detection_widget:DetectionWidget = self.widgets[1]
+        faces = face_detection_widget.countIDs()
+        
         return calculate_ranking(
-            self.frame.shape, self.widgets
+            self.frame.shape, persons, faces
         )
         
     def get_detection_bounds(self):
-        return self.human_detection_widget.getResultData()
+        return self.widgets[0].getResultData()
 
 
 
 
 
 
-if __name__ == "__main__":
-    ports = [1]
-    resolution = [720, 1280]
-    camera_fps = 30
-
-    human_detection_path = "models/detection/yolov8n.pt"
-    face_detection_path = "models/face/yolov8n-face.pt"
-    database_path = "./database"
-
-    imageShow = ImageShowWidget(
-        ports,
-        resolution,
-        camera_fps,
-        human_detection_path,
-        face_detection_path,
-        database_path,
-    )

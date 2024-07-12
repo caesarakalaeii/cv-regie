@@ -5,22 +5,29 @@ from deepface import DeepFace
 import numpy as np
 from threading import Thread
 from utilities import Box, identity_from_string
+from logger import Logger
 
 class DetectionWidget (ABC):
+    '''
+    Absract class to generalize detection widgets
+    '''
     
     widget_frame: np.ndarray
+    stopped: bool
+    detection: bool
+    widget_type = "Base"
     
     def start(self):
-        pass
+        raise NotImplementedError()
     
     def stop(self):
-        pass
+        raise NotImplementedError()
     
-    def countIDs(self):
-        pass
+    def count_ids(self):
+        raise NotImplementedError()
 
-    def getResultData(self):
-        pass
+    def get_result_data(self):
+        raise NotImplementedError()
     
     def update_frame(self, frame):
         self.widget_frame = frame
@@ -28,14 +35,21 @@ class DetectionWidget (ABC):
 
 
 class HumanWidget(DetectionWidget):
+    
+    widget_type = "Human"
+    widget_frame: np.ndarray
+    
+    
 
-    def __init__(self, human_detection_path: str):
+    def __init__(self, human_detection_path: str, l= Logger()):
 
 
-        self.human_detection = False
+        self.detection = False
         self.human_detection_path = human_detection_path
         self.human_detection_score = 0
         self.human_detection_data = [[], [], [], [], []]
+        self.l = l
+        self.l.info('Creating HumanWidget')
 
         self.model = YOLO(human_detection_path)
 
@@ -46,6 +60,8 @@ class HumanWidget(DetectionWidget):
         self.stopped = False
 
     def start(self):
+        self.l.info('Starting HumanWidget')
+        
         self.thread.start()
 
     def run(self):
@@ -58,20 +74,22 @@ class HumanWidget(DetectionWidget):
                     classes=[0],
                     verbose=False,
                 )
-                # TODO: make this reset itself
-
-                self.human_detection = True
+                if len(self.result) != 0:
+                    self.detection = True
+                else:
+                    self.detection = False
+                self.widget_frame = None
                 
     def stop(self):
         self.stopped = True
 
-    def countIDs(self):
+    def count_ids(self):
         counts = 0
         if self.result[0].boxes.id is not None:
             counts = max(self.result[0].boxes.id.int().cpu().tolist())
         return counts
 
-    def getResultData(self):
+    def get_result_data(self):
         data = []
 
         if self.result[0].boxes.id is not None:
@@ -81,15 +99,26 @@ class HumanWidget(DetectionWidget):
                 data.append([[int(identity)], [int(x)], [int(y)], [int(h)], [int(w)]])
 
         return data
+    
+    def update_frame(self, frame):
+        self.widget_frame = frame
 
 
 class FaceWidget:
+    
+    widget_type = "Face"
+    widget_frame: np.ndarray
+    
+    
 
-    def __init__(self,face_detection_path: str):
-        self.face_detection = False
+    def __init__(self,face_detection_path: str, l = Logger()):
+        self.detection = False
         self.face_detection_path = face_detection_path
         self.face_detection_score = 0
         self.face_detection_data = [[], [], [], [], []]
+        
+        self.l = l
+        self.l.info('Creating FaceWidget')
 
         self.model = YOLO(face_detection_path)
 
@@ -100,6 +129,7 @@ class FaceWidget:
         self.stopped = False
 
     def start(self):
+        self.l.info('Starting FaceWidget')
         self.thread.start()
 
     def run(self):
@@ -112,8 +142,12 @@ class FaceWidget:
                     classes=[0],
                     verbose=False,
                 )
-                # TODO: make this reset itself
-                self.face_detection = True
+                if len(self.result) != 0:
+                    self.detection = True
+                else:
+                    self.detection = False
+                self.widget_frame = None
+                
 
     def stop(self):
         self.stopped = True
@@ -124,7 +158,7 @@ class FaceWidget:
             counts = max(self.result[0].boxes.id.int().cpu().tolist())
         return counts
 
-    def get_result_data(self)-> [Box]:
+    def get_result_data(self)-> list[Box]:
         data = []
         if self.result[0].boxes.id is not None:
             for i, identity in enumerate(self.result[0].boxes.id):
@@ -132,16 +166,27 @@ class FaceWidget:
 
                 data.append(Box(x,y,h,w))
         return data
+    
+    def update_frame(self, frame):
+        self.widget_frame = frame
 
 
 
 class DeepFaceWidget:
+    
+    widget_type = "DeepFace"
+    widget_frame: np.ndarray
+    
+    
 
-    def __init__(self,database_path: str):
+    def __init__(self,database_path: str, l= Logger()):
 
         self.database_path = database_path
 
         self.deepface_detections_data = [[], [], [], [], []]
+        
+        self.l = l
+        self.l.info('Creating DeepFaceWidget')
 
         self.widget_frame = None
 
@@ -149,6 +194,8 @@ class DeepFaceWidget:
         self.stopped = False
 
     def start(self):
+        self.l.info('Starting DeepFaceWidget')
+        
         self.thread.start()
 
     def run(self):
@@ -179,3 +226,6 @@ class DeepFaceWidget:
                     h = entry["source_h"][0]
                     data.append(Box([x], [y], [h], [w]))
         return data
+    
+    def update_frame(self, frame):
+        self.widget_frame = frame

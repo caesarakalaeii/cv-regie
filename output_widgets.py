@@ -1,5 +1,10 @@
 from abc import ABC
-
+from detection_widgets import DetectionWidget
+from utilities import calculate_frame_box_static
+import numpy as np
+from logger import Logger
+import cv2 as cv
+from threading import Thread
 
 class OutputWiget(ABC):
     
@@ -16,74 +21,40 @@ class OutputWiget(ABC):
         raise NotImplementedError()
     
 class ImageShowWidget(OutputWiget):
-    "Main widget to show all camera feeds"
+    "Wiget to show CameraFeed"
+    
+    frame: np.ndarray
 
     def __init__(
         self,
-        port: int,
-        resolution: [int, int],
-        camera_fps: int,
-        human_detection_path: str,
-        face_detection_path: str,
-        database_path: str,
+        window_title:str,
+        l= Logger()
     ):
-
-        self.port = port
-        self.resolution = resolution
-        self.camera_fps = camera_fps
-
-        self.human_detection_path = human_detection_path
-        self.face_detection_path = face_detection_path
-        self.database_path = database_path
-
-        self.camera_widgets = []
-
-        self.stopped = False
-
-        self.start()
+        self.l = l
+        self.stopped = True
+        self.window_title = window_title
+        self.frame = None
+        self.thread = Thread(target=self.run)
+        
 
     def start(self):
-
-        for port in self.ports:
-            widget = CameraWidget(
-                port,
-                self.resolution,
-                self.camera_fps,
-                self.human_detection_path,
-                self.face_detection_path,
-                self.database_path,
-            )
-            self.camera_widgets.append(widget)
-
-        for widget in self.camera_widgets:
-            widget.start()
-
-        self.run()
+        self.stopped = False
+        
+        self.thread.start()
 
     def run(self):
 
         while not self.stopped:
-            for widget in self.camera_widgets:
-                if widget.grabbed:
-                    frame = widget.frame
-                    cv.imshow(f"Camera-{widget.port}-normal", frame)
+            
+            if self.frame:
+                cv.imshow(self.window_title, self.frame)
 
-                if widget.human_detection:
-                    frame = widget.human_detection_frame
-                    cv.imshow(f"Camera-{widget.port}-human", frame)
+                # print(f"Port:{widget.port} - fps:{widget.fps}")
 
-                if widget.face_detection:
-                    frame = widget.face_detection_frame
-                    cv.imshow(f"Camera-{widget.port}-face", frame)
-
-                    # print(f"Port:{widget.port} - fps:{widget.fps}")
-
-                if cv.waitKey(1) == ord("q"):
-                    self.stop()
+            if cv.waitKey(1) == ord("q"):
+                self.stop()
 
     def stop(self):
         self.stopped = True
-        for widget in self.camera_widgets:
-            widget.stop()
         cv.destroyAllWindows()
     
