@@ -87,7 +87,7 @@ class CV_Manager(object):
                     self.ranking[i]=cam_widget.get_ranking()
                     if self.debug:
                         debug:OutputWiget
-                        for debug in self.debug_outputs[i]:
+                        for debug in self.debug_outputs[cam_widget.port]:
                             debug.update_frame(cam_widget.frame)
                     
                 best_feed = max(enumerate(self.ranking),key=lambda x: x[1])[0] #find index of highest ranking
