@@ -42,7 +42,7 @@ class ImageShowWidget(OutputWiget):
    
     def start(self):
         self.stopped = False
-        self.thread.start()
+        self.l.warning('OpenCV does not support threading. No thread will be started, use show_image and update_frame instead')
 
     
     def run(self):
