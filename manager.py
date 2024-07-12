@@ -70,8 +70,9 @@ class CV_Manager(object):
             self.start_cam_widgets()
             if self.debug:
                 debug:ImageShowWidget
-                for debug in self.debug_outputs:
-                    debug.start()
+                for debugs in self.debug_outputs.values():
+                    for debug in debugs:
+                        debug.start()
             self.output.start()
             self.thread.start()
             
