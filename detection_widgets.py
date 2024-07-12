@@ -18,20 +18,16 @@ class DetectionWidget (ABC):
     widget_type = "Base"
     
     def start(self):
-        # empty abstract class method
-        pass
+        raise NotImplementedError()
     
     def stop(self):
-        # empty abstract class method
-        pass
+        raise NotImplementedError()
     
     def count_ids(self):
-        # empty abstract class method
-        pass
+        raise NotImplementedError()
 
     def get_result_data(self):
-        # empty abstract class method
-        pass
+        raise NotImplementedError()
     
     def update_frame(self, frame):
         self.widget_frame = frame
@@ -41,7 +37,6 @@ class DetectionWidget (ABC):
 class HumanWidget(DetectionWidget):
     
     widget_type = "Human"
-    widget_frame: np.ndarray
     
     
 
@@ -62,7 +57,8 @@ class HumanWidget(DetectionWidget):
 
         self.thread = Thread(target=self.run)
         self.stopped = True
-
+        
+    
     def start(self):
         if self.stopped:
             self.l.info('Starting HumanWidget')

@@ -1,4 +1,5 @@
 from abc import ABC
+from typing import override
 import numpy as np
 from logger import Logger
 import cv2 as cv
@@ -7,20 +8,19 @@ from threading import Thread
 class OutputWiget(ABC):
     
     def update_frame(self, frame):
-        # empty abstract class method
-        pass
+        raise NotImplementedError()
+
     
     def start(self):
-        # empty abstract class method
-        pass
+        raise NotImplementedError()
+
     
     def stop(self):
-        # empty abstract class method
-        pass
+        raise NotImplementedError()
+
         
     def loop(self):
-        # empty abstract class method
-        pass
+        raise NotImplementedError()
     
 class ImageShowWidget(OutputWiget):
     "Wiget to show CameraFeed"
@@ -38,17 +38,19 @@ class ImageShowWidget(OutputWiget):
         self.frame = None
         self.thread = Thread(target=self.run)
         
-
+    @override
     def start(self):
         self.stopped = False
         self.thread.start()
 
+    @override
     def run(self):
         self.l.passingblue("Starting output widget")
 
         while not self.stopped:
             
             if self.frame is None:
+                self.l.info("no frame recieved")
                 continue
             
             cv.imshow(self.window_title, self.frame)
@@ -57,9 +59,13 @@ class ImageShowWidget(OutputWiget):
 
             if cv.waitKey(1) == ord("q"):
                 self.stop()
-
+    @override
     def stop(self):
         self.l.warning('Stopping Output Widget')
         self.stopped = True
         cv.destroyAllWindows()
+        
+    @override    
+    def update_frame(self, frame):
+        self.widget_frame = frame
     
