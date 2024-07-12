@@ -42,7 +42,7 @@ class ImageShowWidget(OutputWiget):
    
     def start(self):
         self.stopped = False
-        self.l.warning('OpenCV does not support threading. No thread will be started, use show_image and update_frame instead')
+        self.l.warning('OpenCV does not support threading. \nNo thread will be started, use show_image and update_frame instead')
 
     
     def run(self):
@@ -55,9 +55,10 @@ class ImageShowWidget(OutputWiget):
         if self.frame is None:
                 #self.l.info("no frame recieved")
                 return
-            
-        cv.imshow(self.window_title, self.frame)
-
+        try:
+            cv.imshow(self.window_title, self.frame)
+        except Exception as e:
+            self.l.error(e) 
         # print(f"Port:{widget.port} - fps:{widget.fps}")
 
         if cv.waitKey(1) == ord("q"):
