@@ -120,7 +120,7 @@ class CameraWidget:
         )
         
     def get_detection_bounds(self):
-        return self.widgets[0].getResultData()
+        return self.widgets[0].get_result_data()
 
 
 
