@@ -51,7 +51,7 @@ class ImageShowWidget(OutputWiget):
         while not self.stopped:
             
             if self.frame is None:
-                self.l.info("no frame recieved")
+                #self.l.info("no frame recieved")
                 continue
             
             cv.imshow(self.window_title, self.frame)
