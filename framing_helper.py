@@ -90,12 +90,12 @@ class ProcessedFrame(object):
         """
         raise NotImplementedError
 
-        self.__target_box = self.calculate_frame_box_static()
 
-        delta_x1 = self.__target_box.x1 - self.last_box.x1
-        delta_y1 = self.__target_box.y1 - self.last_box.y1
-        delta_x2 = self.__target_box.x2 - self.last_box.x2
-        delta_y2 = self.__target_box.y2 - self.last_box.y2
+        # self.__target_box = self.calculate_frame_box_static()
+        # delta_x1 = self.__target_box.x1 - self.last_box.x1
+        # delta_y1 = self.__target_box.y1 - self.last_box.y1
+        # delta_x2 = self.__target_box.x2 - self.last_box.x2
+        # delta_y2 = self.__target_box.y2 - self.last_box.y2
 
     def get_processed_frame(
         self, interpolation=cv.INTER_LANCZOS4, target_shape=(1280, 720)

@@ -1,10 +1,0 @@
-
-upython:S6540,"+Add a type hint to this function parameter.(¨αΚ½ύÿÿÿÿ8ª‡υσ1J$ba64a7ca-1eaf-4e8a-b901-e243e92e1772
-~python:S6538S"4Add a return type hint to this function declaration.(ΥΕΌΉÿÿÿÿÿ8ª‡υσ1J$96bc6c8f-0bfa-4134-b634-6ac106bd7a00
-~python:S6538j"4Add a return type hint to this function declaration.(ΕωΖώÿÿÿÿ8ª‡υσ1J$bf5adaad-7b8e-4039-890d-b4a45a8a17c3
-vpython:S1481w",Remove the unused local variable "has_init".(‘έ¶ÿωÿÿÿÿ8ª‡υσ1J$2f67272e-c29f-45d0-a5f5-68a921a2e0c5
-zpython:S1721z"0Remove the parentheses after this "for" keyword.(ϊξ±£ώÿÿÿÿ8ª‡υσ1J$c4753ea0-5c93-4dbc-91d2-bd6a5576a5b6
-~python:S6538~"4Add a return type hint to this function declaration.(§ΤΌύÿÿÿÿ8ª‡υσ1J$df630617-9abe-4cb8-9b82-a68533fcec46
-python:S1481…"6Replace the unused local variable "channels" with "_".(Μƒϊÿÿÿÿ8ª‡υσ1J$19c5421d-0dd2-40d5-bd3a-55ee8878d759
-python:S3776~"TRefactor this function to reduce its Cognitive Complexity from 16 to the 15 allowed.(§ΤΌύÿÿÿÿ8ª‡υσ1J$7b6b569a-4103-4b66-840d-916f02559723
-€python:S139—"6Move this trailing comment on the previous empty line.(ϋΩ³όÿÿÿÿ8ª‡υσ1J$2475224f-3f00-428b-9bb6-e2be9d51c886
