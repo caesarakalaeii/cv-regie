@@ -119,12 +119,15 @@ class HumanWidget(DetectionWidget):
         if self.result[0].boxes.id is not None:
             for i, identity in enumerate(self.result[0].boxes.id):
 
-                x, y, w, h = self.result[0].boxes.xywh[i]
-                data.append(Box(x,y,x+w,y+h))
+                x1, y1, x2, y2 = self.result[0].boxes.xyxy[i]
+                data.append(Box(x1,y1,x2,y2))
 
         return data
         
     def plot_results(self, frame = None) -> np.ndarray:
+        if frame is not None:
+            self.update_frame(frame)
+            self.run_detection()
         if self.result is None:
             return self.widget_frame
         if self.result == []:
@@ -132,9 +135,7 @@ class HumanWidget(DetectionWidget):
         if self.result[0] is None:
             return self.widget_frame
         
-        if frame is not None:
-            self.update_frame(frame)
-            self.run_detection()
+        
         return self.result[0].plot()
 
 
@@ -210,9 +211,8 @@ class FaceWidget(DetectionWidget):
             return data
         if self.result[0].boxes.id is not None:
             for i, identity in enumerate(self.result[0].boxes.id):
-                x, y, w, h = self.result[0].boxes.xywh[i]
-
-                data.append(Box(x,y,x+w,y+h))
+                x1, y1, x2, y2 = self.result[0].boxes.xyxy[i]
+                data.append(Box(x1,y1,x2,y2))
         return data
     
     def plot_results(self, frame = None) -> np.ndarray:
@@ -318,7 +318,10 @@ if __name__ == '__main__':
     
     for i, port in enumerate(ports):
         l.passing("Creating VidCaps")
-        captures.append(cv.VideoCapture(port))
+        if os.name == 'nt':
+            captures.append(cv.VideoCapture(port, cv.CAP_DSHOW))
+        else:
+            captures.append(cv.VideoCapture(port))
         
         #Change this to test for different widgets
         widet_to_test = HumanWidget(human_detection_path, l)

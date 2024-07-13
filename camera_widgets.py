@@ -4,6 +4,7 @@ Created on Tue May 21 10:04:30 2024
 
 @author: Wittke
 """
+import os
 from utilities import Box, calculate_frame_box_static, calculate_ranking, get_processed_frame, os_sensitive_backslashes
 from detection_widgets import HumanWidget, DeepFaceWidget, FaceWidget, DetectionWidget
 from threading import Thread
@@ -42,7 +43,10 @@ class CameraWidget:
         self.frame_counter = 0
         self.fps = 0
         self.l.passing(f'Creating CameraWidget {self.port}')
-        self.cap = cv.VideoCapture(self.port)
+        if os.name == 'nt':
+            self.cap = cv.VideoCapture(port, cv.CAP_DSHOW)
+        else:
+            self.cap = cv.VideoCapture(port)
         self.cap.set(cv.CAP_PROP_FRAME_WIDTH, self.resolution[1])
         self.cap.set(cv.CAP_PROP_FRAME_HEIGHT, self.resolution[0])
         self.cap.set(cv.CAP_PROP_FPS, self.camera_fps)
@@ -136,8 +140,7 @@ class CameraWidget:
         return_frame = self.frame.copy()
         widget:DetectionWidget
         for widget in self.widgets:
-            widget.update_frame(return_frame)
-            return_frame = widget.plot_results()
+            return_frame = widget.plot_results(return_frame)
 
         return return_frame
 
@@ -159,7 +162,7 @@ if __name__ == '__main__':
     for i, port in enumerate(ports):
         l.passing("Creating VidCaps")
         captures.append(CameraWidget(port, 
-                                     [480, 640], 
+                                     [720, 1280], 
                                      30, 
                                      human_detection_path, 
                                      face_detection_path, 
@@ -171,27 +174,35 @@ if __name__ == '__main__':
         captures[i].start()
     
     box:Box = None
-    while True:
-        for i, port in enumerate(ports):
-            
-            cap: CameraWidget= captures[i]
-            
-            if cap.grabbed:
-                boxes = cap.get_detection_bounds()
-                if boxes == []:
-                    l.warning('Boxes empty, continuing')
+    try:
+        while True:
+            for i, port in enumerate(ports):
+                
+                cap: CameraWidget= captures[i]
+                
+                if cap.grabbed:
+                    boxes = cap.get_detection_bounds()
+                    if boxes == []:
+                        l.warning('Boxes empty, continuing')
+                    else:
+                        box = calculate_frame_box_static(boxes)
+                    if box is None:
+                        cropped_frame = cap.frame
+                    else:
+                        cropped_frame = get_processed_frame(box, cap.frame)
+                    min_ex_show[i].update_frame(cropped_frame)
+                    min_ex_show[i].show_image()
+                    debug_output.update_frame(cap.annotate_frame())
+                    debug_output.show_image()
                 else:
-                    box = calculate_frame_box_static(boxes)
-                if box is None:
-                    cropped_frame = cap.frame
-                else:
-                    cropped_frame = get_processed_frame(box, cap.frame)
-                min_ex_show[i].update_frame(cropped_frame)
-                min_ex_show[i].show_image()
-                debug_output.update_frame(cap.annotate_frame())
-                debug_output.show_image()
-            else:
-                l.warning("No frame returned")
+                    l.warning("No frame returned")
 
-
+    except (KeyboardInterrupt, Exception) as e:
+        l.error(f'{e}\nStopping widgets')
+        debug_output.stop()
+        for widget in min_ex_show:
+            widget.stop()
+        for cap in captures:
+            cap.stop()
+        exit(1)
 

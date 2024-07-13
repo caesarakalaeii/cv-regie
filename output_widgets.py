@@ -1,4 +1,5 @@
 from abc import ABC
+import os
 import numpy as np
 from logger import Logger
 import cv2 as cv
@@ -83,7 +84,10 @@ if __name__ == '__main__':
     
     for i, port in enumerate(ports):
         l.passing("Creating VidCaps")
-        captures.append(cv.VideoCapture(port))
+        if os.name == 'nt':
+            captures.append(cv.VideoCapture(port, cv.CAP_DSHOW))
+        else:
+            captures.append(cv.VideoCapture(port))
         min_ex.append(ImageShowWidget(f'Minimum example Cap {port}', l))
         min_ex[i].start()
     

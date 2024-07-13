@@ -159,7 +159,10 @@ def list_ports(port_range: int, l:Logger) -> tuple[list[int], list[int]]:
     working_ports = []
     available_ports = []
     for dev_port in range(port_range):
-        camera = cv.VideoCapture(dev_port)
+        if os.name == 'nt':
+            camera = cv.VideoCapture(dev_port, cv.CAP_DSHOW)
+        else:
+            camera = cv.VideoCapture(dev_port)
         if not camera.isOpened():
             l.fail(f'Port {dev_port} not open')
         else:

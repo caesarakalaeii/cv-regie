@@ -25,7 +25,7 @@ def ensure_dir_exists(directory):
 
 if __name__ == '__main__':
    
-    ports = [0,1]
+    ports = [0,3,8]
     resolution = [720, 1280]
     camera_fps = 30
 

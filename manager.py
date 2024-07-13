@@ -76,9 +76,10 @@ class CV_Manager(object):
                         debug.start()
             self.output.start()
             self.thread.start()
-            
+        self.l.passing('Finished Setting up Manager')
             
     def loop(self):
+        box = None
         try:
             while self.running:
                 self.l.info('Calculating rankings')
@@ -99,8 +100,14 @@ class CV_Manager(object):
                 if best_frame is None or self.ranking[best_feed] == 0:
                     continue
                 boxes = best_widget.get_detection_bounds()
-                bounding_box = calculate_frame_box_static(boxes)
-                cropped_frame = get_processed_frame(bounding_box, best_frame)
+                if boxes == []:
+                    self.l.warning('Boxes empty, continuing')
+                else:
+                    box = calculate_frame_box_static(boxes)
+                if box is None:
+                    cropped_frame = best_widget.frame
+                else:
+                    cropped_frame = get_processed_frame(box, best_widget.frame)
                 self.output.update_frame(cropped_frame)
         except Exception as e:
             self.l.error(e.with_traceback(e.__traceback__))
@@ -109,6 +116,7 @@ class CV_Manager(object):
             
             
     def start_image_show_no_threading(self):
+        self.l.passingblue('Starting CV ImageShow')
         running = True
         while running:
             outputs: list[OutputWiget]
