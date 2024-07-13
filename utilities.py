@@ -110,26 +110,30 @@ def calculate_ranking(
 
 
 def calculate_frame_box_static(boxes: list[Box]) -> Box:
-        lowest_x = 99999
-        highest_x = 0
-        lowest_y = 99999
-        highest_y = 0
+    '''
+    return bounding box for all boxes in 16:9
+    '''    
 
-        for box in boxes:
-            if box.x1 < lowest_x:
-                lowest_x = box.x1
-            if box.x2 > highest_x:
-                highest_x = box.x2
-            if box.y1 < lowest_y:
-                lowest_y = box.y1
-            if box.y2 > highest_y:
-                highest_y = box.y2
+    lowest_x = 99999
+    highest_x = 0
+    lowest_y = 99999
+    highest_y = 0
 
-        box = Box(lowest_x, lowest_y, highest_x, highest_y)
-        box = pad_to_16by9(box, target_shape=(16, 9))
+    for box in boxes:
+        if box.x1 < lowest_x:
+            lowest_x = box.x1
+        if box.x2 > highest_x:
+            highest_x = box.x2
+        if box.y1 < lowest_y:
+            lowest_y = box.y1
+        if box.y2 > highest_y:
+            highest_y = box.y2
 
-        return box
-    
+    box = Box(lowest_x, lowest_y, highest_x, highest_y)
+    box = pad_to_16by9(box, target_shape=(16, 9))
+
+    return box
+
 def get_processed_frame(
         box:Box, frame:np.ndarray, interpolation=cv.INTER_LANCZOS4, target_shape=(1280, 720)
     ) -> np.ndarray:

@@ -4,13 +4,14 @@ Created on Tue May 21 10:04:30 2024
 
 @author: Wittke
 """
-from utilities import calculate_ranking, os_sensitive_backslashes
+from utilities import Box, calculate_frame_box_static, calculate_ranking, get_processed_frame, os_sensitive_backslashes
 from detection_widgets import HumanWidget, DeepFaceWidget, FaceWidget, DetectionWidget
 from threading import Thread
 import cv2 as cv
 from logger import Logger
 from timeit import default_timer as timer
 from output_widgets import ImageShowWidget
+import numpy as np
 
 
 
@@ -19,11 +20,12 @@ from output_widgets import ImageShowWidget
 class CameraWidget:
     
     widgets: list[DetectionWidget]
+    frame: np.ndarray
 
     def __init__(
         self,
         port: int,
-        resolution: list[int, int],
+        resolution: list[int],
         camera_fps: int,
         human_detection_path: str,
         face_detection_path: str,
@@ -127,9 +129,17 @@ class CameraWidget:
             self.frame.shape, persons, faces
         )
         
-    def get_detection_bounds(self):
+    def get_detection_bounds(self) -> list[Box]:
         return self.widgets[0].get_result_data()
+    
+    def annotate_frame(self) -> np.ndarray:
+        return_frame = self.frame.copy()
+        widget:DetectionWidget
+        for widget in self.widgets:
+            widget.update_frame(return_frame)
+            return_frame = widget.plot_results()
 
+        return return_frame
 
 if __name__ == '__main__':
     
@@ -142,7 +152,7 @@ if __name__ == '__main__':
     
     
     captures = []
-    
+    debug_output = ImageShowWidget('Debug Cap', l)
     ports = [0]
     min_ex_show = []
     
@@ -160,14 +170,26 @@ if __name__ == '__main__':
         min_ex_show[i].start()
         captures[i].start()
     
+    box:Box = None
     while True:
         for i, port in enumerate(ports):
             
             cap: CameraWidget= captures[i]
             
             if cap.grabbed:
-                min_ex_show[i].update_frame(cap.frame)
+                boxes = cap.get_detection_bounds()
+                if boxes == []:
+                    l.warning('Boxes empty, continuing')
+                else:
+                    box = calculate_frame_box_static(boxes)
+                if box is None:
+                    cropped_frame = cap.frame
+                else:
+                    cropped_frame = get_processed_frame(box, cap.frame)
+                min_ex_show[i].update_frame(cropped_frame)
                 min_ex_show[i].show_image()
+                debug_output.update_frame(cap.annotate_frame())
+                debug_output.show_image()
             else:
                 l.warning("No frame returned")
 

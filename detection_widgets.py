@@ -35,10 +35,13 @@ class DetectionWidget (ABC):
     def update_frame(self, frame):
         self.widget_frame = frame
         
-    def plot_results(self) -> np.ndarray:
-        return plot_bounding_boxes(self.widget_frame, self.get_result_data())
+    def plot_results(self, frame = None) -> np.ndarray:
+        if frame is None:
+            return plot_bounding_boxes(self.widget_frame, self.get_result_data())
+        return plot_bounding_boxes(frame, self.get_result_data())
         
-
+    def run_detection(self):
+        raise NotImplementedError()
 
 
 class HumanWidget(DetectionWidget):
@@ -78,13 +81,7 @@ class HumanWidget(DetectionWidget):
             while not self.stopped:
                 if self.widget_frame is None:
                     continue
-                self.result = self.model.track(
-                    self.widget_frame,
-                    tracker="bytetrack.yaml",
-                    imgsz=320,
-                    classes=[0],
-                    verbose=False,
-                )
+                self.run_detection()
                 if len(self.result) != 0:
                     self.detection = True
                 else:
@@ -96,12 +93,21 @@ class HumanWidget(DetectionWidget):
             raise e
                 
     
-        
+    def run_detection(self):
+        self.result = self.model.track(
+                    self.widget_frame,
+                    tracker="bytetrack.yaml",
+                    imgsz=320,
+                    classes=[0],
+                    verbose=False,
+                )
 
     def count_ids(self):
         counts = 0
         if self.result is None:
-            return 0
+            return counts
+        if self.result[0].boxes is None:
+            return counts
         if self.result[0].boxes.id is not None:
             counts = max(self.result[0].boxes.id.int().cpu().tolist())
         return counts
@@ -118,7 +124,7 @@ class HumanWidget(DetectionWidget):
 
         return data
         
-    def plot_results(self) -> np.ndarray:
+    def plot_results(self, frame = None) -> np.ndarray:
         if self.result is None:
             return self.widget_frame
         if self.result == []:
@@ -126,6 +132,9 @@ class HumanWidget(DetectionWidget):
         if self.result[0] is None:
             return self.widget_frame
         
+        if frame is not None:
+            self.update_frame(frame)
+            self.run_detection()
         return self.result[0].plot()
 
 
@@ -166,13 +175,7 @@ class FaceWidget(DetectionWidget):
             while not self.stopped:
                 if self.widget_frame is None:
                     continue
-                self.result = self.model.track(
-                    self.widget_frame,
-                    tracker="bytetrack.yaml",
-                    imgsz=320,
-                    classes=[0],
-                    verbose=False,
-                )
+                self.run_detection()
                 if len(self.result) != 0:
                     self.detection = True
                 else:
@@ -183,7 +186,14 @@ class FaceWidget(DetectionWidget):
             self.stop()
             raise e
                 
-
+    def run_detection(self):
+        self.result = self.model.track(
+                    self.widget_frame,
+                    tracker="bytetrack.yaml",
+                    imgsz=320,
+                    classes=[0],
+                    verbose=False,
+                )
         
 
     def count_ids(self):
@@ -205,7 +215,7 @@ class FaceWidget(DetectionWidget):
                 data.append(Box(x,y,x+w,y+h))
         return data
     
-    def plot_results(self) -> np.ndarray:
+    def plot_results(self, frame = None) -> np.ndarray:
         if self.result is None:
             return self.widget_frame
         if self.result == []:
@@ -213,6 +223,9 @@ class FaceWidget(DetectionWidget):
         if self.result[0] is None:
             return self.widget_frame
         
+        if frame is not None:
+            self.update_frame(frame)
+            self.run_detection()
         return self.result[0].plot()
     
 
@@ -252,14 +265,7 @@ class DeepFaceWidget(DetectionWidget):
             while not self.stopped:
                 if self.widget_frame is None:
                     continue
-                self.result = DeepFace.find(
-                    img_path=np.array(self.widget_frame),
-                    db_path=self.database_path,
-                    enforce_detection=False,
-                    silent=True,
-                    detector_backend="yolov8",
-                    distance_metric="euclidean_l2"
-                )
+                self.run_detection()
                 self.widget_frame = None
         except Exception as e:
             self.l.error(e.with_traceback(e.__traceback__))
@@ -281,6 +287,16 @@ class DeepFaceWidget(DetectionWidget):
                     h = entry["source_h"][0]
                     data.append(Box(x,y,x+w,y+h,identity))
         return data
+    
+    def run_detection(self):
+        self.result = DeepFace.find(
+                    img_path=np.array(self.widget_frame),
+                    db_path=self.database_path,
+                    enforce_detection=False,
+                    silent=True,
+                    detector_backend="yolov8",
+                    distance_metric="euclidean_l2"
+                )
     
     
 
