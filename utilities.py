@@ -5,6 +5,7 @@ module comprised of utility functions, manly meant for static methods that provi
 import os
 import cv2 as cv
 import numpy as np
+from logger import Logger
 
 
 class Box:
@@ -136,3 +137,40 @@ def get_processed_frame(
         except Exception as e:
             print(e)
             return frame
+        
+# https://stackoverflow.com/questions/57577445/list-available-cameras-opencv-python
+def list_ports(port_range: int, l:Logger) -> tuple[list[int], list[int]]:
+    """
+    Test the ports and returns a tuple with the available ports
+    and the ones that are working.
+    """
+    working_ports = []
+    available_ports = []
+    for dev_port in range(port_range):
+        camera = cv.VideoCapture(dev_port)
+        if not camera.isOpened():
+            l.fail(f'Port {dev_port} not open')
+        else:
+            is_reading, _ = camera.read()
+            w = camera.get(3)
+            h = camera.get(4)
+            if is_reading:
+                l.passing(f'Port {dev_port} is open and reads {w}x{h}')
+                working_ports.append(dev_port)
+            else:
+                l.warning(f'Port {dev_port} is open, but does not read {w}x{h}')
+                available_ports.append(dev_port)
+        dev_port += 1
+    return available_ports, working_ports
+
+if __name__ == '__main__':
+    l = Logger(True)
+    port_range = 10
+    
+    l.warning('Starting search for open Ports \nThis might take a while!')
+    available_ports, working_ports = list_ports(port_range, l)
+    l.passingblue(f'Found Ports: {available_ports}\nWorking Ports are: {working_ports}')
+    
+    
+    
+    

@@ -71,3 +71,29 @@ class ImageShowWidget(OutputWiget):
         
        
   
+if __name__ == '__main__':
+    
+    l = Logger(True)
+    l.passingblue("Starting Minimum example, only used for debugging purposes")
+    
+    captures = []
+    
+    ports = [0, 8]
+    min_ex = []
+    
+    for i, port in enumerate(ports):
+        l.passing("Creating VidCaps")
+        captures.append(cv.VideoCapture(port))
+        min_ex.append(ImageShowWidget(f'Minimum example Cap {port}', l))
+        min_ex[i].start()
+    
+    while True:
+        for i, port in enumerate(ports):
+            cap: cv.VideoCapture = captures[i]
+            grabbed, frame = cap.read()
+            
+            if grabbed:
+                min_ex[i].update_frame(frame)
+                min_ex[i].show_image()
+            else:
+                l.warning("No frame returned")
