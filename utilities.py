@@ -20,6 +20,9 @@ class Box:
         self.y2 = int(y2)
         self.x2 = int(x2)
 
+    def __str__(self) -> str:
+        return f'X1:{self.x1} Y1:{self.y1} X2:{self.x2} Y2:{self.y2}'
+    
     def width(self):
         return self.x2 - self.x1
 

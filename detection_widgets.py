@@ -303,6 +303,9 @@ if __name__ == '__main__':
             
             if grabbed:
                 widget.update_frame(frame)
-                l.info(widget.get_result_data())
+                boxes = widget.get_result_data()
+                box:Box
+                for box in boxes:
+                    l.info(box.)
             else:
                 l.warning("No frame returned")
