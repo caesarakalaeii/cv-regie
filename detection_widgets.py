@@ -4,8 +4,9 @@ from ultralytics import YOLO
 from deepface import DeepFace
 import numpy as np
 from threading import Thread
-from utilities import Box, identity_from_string
+from utilities import Box, identity_from_string, os_sensitive_backslashes
 from logger import Logger
+import cv2 as cv
 
 class DetectionWidget (ABC):
     '''
@@ -271,3 +272,37 @@ class DeepFaceWidget:
     
     def update_frame(self, frame):
         self.widget_frame = frame
+        
+
+if __name__ == '__main__':
+    
+    l = Logger(True)
+    l.passingblue("Starting Minimum example, only used for debugging purposes")
+    human_detection_path = os_sensitive_backslashes("models/detection/yolov8n.pt")
+
+    captures = []
+    
+    ports = [0]
+    min_ex = []
+    
+    for i, port in enumerate(ports):
+        l.passing("Creating VidCaps")
+        captures.append(cv.VideoCapture(port))
+        
+        #Change this to test for different widgets
+        widet_to_test = HumanWidget(human_detection_path, l)
+        
+        min_ex.append(widet_to_test)
+        min_ex[i].start()
+    
+    while True:
+        for i, port in enumerate(ports):
+            cap: cv.VideoCapture = captures[i]
+            grabbed, frame = cap.read()
+            widget: DetectionWidget = min_ex[i]
+            
+            if grabbed:
+                widget.update_frame(frame)
+                l.info(widget.get_result_data())
+            else:
+                l.warning("No frame returned")
