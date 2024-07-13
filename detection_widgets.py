@@ -4,8 +4,9 @@ from ultralytics import YOLO
 from deepface import DeepFace
 import numpy as np
 from threading import Thread
-from utilities import Box, identity_from_string, os_sensitive_backslashes
+from utilities import Box, identity_from_string, os_sensitive_backslashes, plot_bounding_boxes
 from logger import Logger
+from output_widgets import ImageShowWidget
 import cv2 as cv
 
 class DetectionWidget (ABC):
@@ -22,16 +23,21 @@ class DetectionWidget (ABC):
         raise NotImplementedError()
     
     def stop(self):
-        raise NotImplementedError()
+        self.stopped = True
+        self.l.warning(f'Stopping {self.widget_type}')
     
     def count_ids(self):
         raise NotImplementedError()
 
-    def get_result_data(self):
+    def get_result_data(self) -> list[Box]:
         raise NotImplementedError()
     
     def update_frame(self, frame):
         self.widget_frame = frame
+        
+    def plot_results(self) -> np.ndarray:
+        return plot_bounding_boxes(self.widget_frame, self.get_result_data())
+        
 
 
 
@@ -89,9 +95,7 @@ class HumanWidget(DetectionWidget):
             self.stop()
             raise e
                 
-    def stop(self):
-        self.stopped = True
-        self.l.warning(f'Stopping {self.widget_type}')
+    
         
 
     def count_ids(self):
@@ -113,12 +117,19 @@ class HumanWidget(DetectionWidget):
                 data.append(Box(x,y,x+w,y+h))
 
         return data
-    
-    def update_frame(self, frame):
-        self.widget_frame = frame
+        
+    def plot_results(self) -> np.ndarray:
+        if self.result is None:
+            return self.widget_frame
+        if self.result == []:
+            return self.widget_frame
+        if self.result[0] is None:
+            return self.widget_frame
+        
+        return self.result[0].plot()
 
 
-class FaceWidget:
+class FaceWidget(DetectionWidget):
     
     widget_type = "Face"
     widget_frame: np.ndarray
@@ -173,9 +184,6 @@ class FaceWidget:
             raise e
                 
 
-    def stop(self):
-        self.stopped = True
-        self.l.warning(f'Stopping {self.widget_type}')
         
 
     def count_ids(self):
@@ -197,12 +205,20 @@ class FaceWidget:
                 data.append(Box(x,y,x+w,y+h))
         return data
     
-    def update_frame(self, frame):
-        self.widget_frame = frame
+    def plot_results(self) -> np.ndarray:
+        if self.result is None:
+            return self.widget_frame
+        if self.result == []:
+            return self.widget_frame
+        if self.result[0] is None:
+            return self.widget_frame
+        
+        return self.result[0].plot()
+    
 
 
 
-class DeepFaceWidget:
+class DeepFaceWidget(DetectionWidget):
     
     widget_type = "DeepFace"
     widget_frame: np.ndarray
@@ -242,17 +258,13 @@ class DeepFaceWidget:
                     enforce_detection=False,
                     silent=True,
                     detector_backend="yolov8",
-                    distance_metric="euclidean_l2",
+                    distance_metric="euclidean_l2"
                 )
                 self.widget_frame = None
         except Exception as e:
             self.l.error(e.with_traceback(e.__traceback__))
             self.stop()
             raise e
-
-    def stop(self):
-        self.stopped = True
-        self.l.warning(f'Stopping {self.widget_type}')
 
     def get_result_data(self):
         data = []
@@ -267,11 +279,11 @@ class DeepFaceWidget:
                     y = entry["source_y"][0]
                     w = entry["source_w"][0]
                     h = entry["source_h"][0]
-                    data.append(Box(x,y,x+w,y+h))
+                    data.append(Box(x,y,x+w,y+h,identity))
         return data
     
-    def update_frame(self, frame):
-        self.widget_frame = frame
+    
+
         
 
 if __name__ == '__main__':
@@ -279,11 +291,14 @@ if __name__ == '__main__':
     l = Logger(True)
     l.passingblue("Starting Minimum example, only used for debugging purposes")
     human_detection_path = os_sensitive_backslashes("models/detection/yolov8n.pt")
-
+    face_detection_path = os_sensitive_backslashes("models/face/yolov8n-face.pt")
+    database_path = os_sensitive_backslashes("database")
+    
     captures = []
     
     ports = [0]
     min_ex = []
+    outputs = []
     
     for i, port in enumerate(ports):
         l.passing("Creating VidCaps")
@@ -291,21 +306,30 @@ if __name__ == '__main__':
         
         #Change this to test for different widgets
         widet_to_test = HumanWidget(human_detection_path, l)
-        
+        outputs.append(ImageShowWidget(f'Detection {widet_to_test.widget_type} Port {port}'))
         min_ex.append(widet_to_test)
         min_ex[i].start()
-    
-    while True:
-        for i, port in enumerate(ports):
-            cap: cv.VideoCapture = captures[i]
-            grabbed, frame = cap.read()
-            widget: DetectionWidget = min_ex[i]
-            
-            if grabbed:
-                widget.update_frame(frame)
-                boxes = widget.get_result_data()
-                box:Box
-                for box in boxes:
-                    l.info(box)
-            else:
-                l.warning("No frame returned")
+        outputs[i].start()
+    try:
+        while True:
+            for i, port in enumerate(ports):
+                cap: cv.VideoCapture = captures[i]
+                grabbed, frame = cap.read()
+                widget: DetectionWidget = min_ex[i]
+                output: ImageShowWidget = outputs[i]
+                if grabbed:
+                    widget.update_frame(frame)
+                    boxes = widget.get_result_data()
+                    annotated_frame =  widget.plot_results()
+                    output.update_frame(annotated_frame)
+                    output.show_image()
+                    box:Box
+                    for box in boxes:
+                        l.info(box)
+                else:
+                    l.warning("No frame returned")
+    except (KeyboardInterrupt, Exception) as e:
+        l.error(f'{e}\nStopping widgets')
+        for widget in min_ex:
+            widget.stop()
+        exit(1)

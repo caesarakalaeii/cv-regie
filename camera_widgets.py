@@ -4,13 +4,13 @@ Created on Tue May 21 10:04:30 2024
 
 @author: Wittke
 """
-from utilities import calculate_ranking
+from utilities import calculate_ranking, os_sensitive_backslashes
 from detection_widgets import HumanWidget, DeepFaceWidget, FaceWidget, DetectionWidget
 from threading import Thread
 import cv2 as cv
 from logger import Logger
 from timeit import default_timer as timer
-
+from output_widgets import ImageShowWidget
 
 
 
@@ -48,11 +48,11 @@ class CameraWidget:
         
         human_detection_widget = HumanWidget(human_detection_path,l)
         face_detection_widget = FaceWidget(face_detection_path,l)
-        deepface_detection_widget = DeepFaceWidget(database_path,l)
+        # deepface_detection_widget = DeepFaceWidget(database_path,l)
         self.widgets = [
             human_detection_widget,
             face_detection_widget,
-            deepface_detection_widget
+            #deepface_detection_widget
             ]
         
         
@@ -131,7 +131,45 @@ class CameraWidget:
         return self.widgets[0].get_result_data()
 
 
-
+if __name__ == '__main__':
+    
+    l = Logger(True)
+    l.passingblue("Starting Minimum example, only used for debugging purposes")
+    human_detection_path = os_sensitive_backslashes("models/detection/yolov8n.pt")
+    face_detection_path = os_sensitive_backslashes("models/face/yolov8n-face.pt")
+    database_path = os_sensitive_backslashes("database")
+    
+    
+    
+    captures = []
+    
+    ports = [0]
+    min_ex_show = []
+    
+    for i, port in enumerate(ports):
+        l.passing("Creating VidCaps")
+        captures.append(CameraWidget(port, 
+                                     [480, 640], 
+                                     30, 
+                                     human_detection_path, 
+                                     face_detection_path, 
+                                     database_path,
+                                     l
+                                     ))
+        min_ex_show.append(ImageShowWidget(f'Minimum example Cap {port}', l))
+        min_ex_show[i].start()
+        captures[i].start()
+    
+    while True:
+        for i, port in enumerate(ports):
+            
+            cap: CameraWidget= captures[i]
+            
+            if cap.grabbed:
+                min_ex_show[i].update_frame(cap.frame)
+                min_ex_show[i].show_image()
+            else:
+                l.warning("No frame returned")
 
 
 

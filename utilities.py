@@ -13,12 +13,14 @@ class Box:
     y1: int
     x2: int
     y2: int
+    identifier: str
 
-    def __init__(self, x1, y1, x2, y2):
+    def __init__(self, x1, y1, x2, y2, identifier:str = None):
         self.x1 = int(x1)
         self.y1 = int(y1)
         self.y2 = int(y2)
         self.x2 = int(x2)
+        self.identifier = identifier
 
     def __str__(self) -> str:
         return f'X1:{self.x1} Y1:{self.y1} X2:{self.x2} Y2:{self.y2}'
@@ -35,7 +37,10 @@ class Box:
     def cut_out(self, frame: np.ndarray) -> np.ndarray:
         return frame[self.y1 : self.y2, self.x1 : self.x2]
 
-
+def plot_bounding_boxes(frame: np.ndarray, boxes: list[Box]) -> np.ndarray:
+    for box in boxes:
+        cv.rectangle(frame, (box.x1, box.y1), (box.x2, box.y2), (0, 255, 0), 2)
+    return frame
 
 
 

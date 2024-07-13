@@ -10,7 +10,7 @@ class Logger():
         self.file_logging = file_logging
         if file_logging:
             if file_URI is None:
-                file_URI = "{}".format(self.log_name)+"_log_{}".format(time.asctime(time.localtime()))+".txt"
+                file_URI = "{}".format(self.log_name)+"_log_{}".format(time.asctime(time.strptime()))+".txt"
                 
                     
             else:
@@ -27,43 +27,45 @@ class Logger():
     def warning(self, skk, printout = True): #yellow
         
         if printout and self.console_log:
-            print("\033[93m {}\033[00m" .format("WARNING:"),"\033[93m {}\033[00m" .format(skk))
+            print("\033[93m{} {}\033[00m" .format(self.time_str(),"WARNING:"),"\033[93m {}\033[00m" .format(skk))
         if self.file_logging:
             logging.warning(skk)
        
     def error(self, skk, printout = True): #red
         if printout and self.console_log:   
-            print("\033[91m {}\033[00m" .format("ERROR:"),"\033[91m {}\033[00m" .format(skk))
+            print("\033[91m{} {}\033[00m" .format(self.time_str(),"ERROR:"),"\033[91m {}\033[00m" .format(skk))
         if self.file_logging:
             logging.error(skk)
         
     def fail(self, skk, printout = True): #red
         if printout and self.console_log: 
-            print("\033[91m {}\033[00m" .format("FATAL:"),"\033[91m {}\033[00m" .format(skk))
+            print("\033[91m{} {}\033[00m" .format(self.time_str(),"FATAL:"),"\033[91m {}\033[00m" .format(skk))
         if self.file_logging:
             logging.exception(skk)
     def passing(self, skk, printout = True): #green
         if printout and self.console_log: 
-            print("\033[92m {}\033[00m" .format(skk))
+            print("\033[92m{} {}\033[00m" .format(self.time_str(),skk))
         if self.file_logging:
             logging.info(skk)
     def passingblue(self, skk, printout = True): #blue
         if printout and self.console_log: 
-            print("\033[96m {}\033[00m" .format(skk))
+            print("\033[96m{} {}\033[00m" .format(self.time_str(),skk))
         if self.file_logging:
             logging.info(skk)
     def info(self, skk, printout = True): #blue
         if printout and self.console_log: 
-            print("\033[94m {}\033[00m" .format("Info:"),"\033[94m {}\033[00m" .format(skk))
+            print("\033[94m{} {}\033[00m" .format(self.time_str(),"Info:"),"\033[94m {}\033[00m" .format(skk))
         if self.file_logging:
             logging.debug(skk)
     def botReply(self,user, skk):#blue
         if self.console_log: 
-            print("\033[94m {}\033[00m" .format("{}:".format(user)),"\033[94m {}\033[00m" .format(skk))
+            print("\033[94m{} {}\033[00m" .format(self.time_str(),"{}:".format(user)),"\033[94m {}\033[00m" .format(skk))
             
     def userReply(self,user, platform,skk):#green
         if self.console_log: 
-            print("\033[92m {}:\033[00m" .format("{}".format(user)+" on {}".format(platform)),"\033[92m {}\033[00m" .format(skk))
-            
+            print("\033[92m{} {}:\033[00m" .format(time.strftime(),"{}".format(user)+" on {}".format(platform)),"\033[92m {}\033[00m" .format(skk))
+         
+    def time_str(self):
+        return time.strftime("%d:%m:%Y:%H:%M:%S", time.localtime())   
             
             
