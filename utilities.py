@@ -37,7 +37,7 @@ class Box:
     def cut_out(self, frame: np.ndarray) -> np.ndarray:
         return frame[self.y1 : self.y2, self.x1 : self.x2]
 
-def plot_bounding_boxes(frame: np.ndarray, boxes: list[Box]) -> np.ndarray:
+def plot_bounding_boxes(frame: np.ndarray, boxes ) -> np.ndarray:
     for box in boxes:
         cv.rectangle(frame, (box.x1, box.y1), (box.x2, box.y2), (0, 255, 0), 2)
     return frame
@@ -109,7 +109,7 @@ def calculate_ranking(
 
 
 
-def calculate_frame_box_static(boxes: list[Box]) -> Box:
+def calculate_frame_box_static(boxes ) -> Box:
     '''
     return bounding box for all boxes in 16:9
     '''    

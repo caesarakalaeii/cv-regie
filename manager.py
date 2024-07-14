@@ -119,7 +119,6 @@ class CV_Manager(object):
         self.l.passingblue('Starting CV ImageShow')
         running = True
         while running:
-            outputs: list[OutputWiget]
             for outputs in self.debug_outputs.values():
                 for output in outputs:
                     output.show_image()

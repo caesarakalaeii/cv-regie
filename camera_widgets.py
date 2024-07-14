@@ -20,13 +20,13 @@ import numpy as np
 
 class CameraWidget:
     
-    widgets: list[DetectionWidget]
+    widgets
     frame: np.ndarray
 
     def __init__(
         self,
         port: int,
-        resolution: list[int],
+        resolution,
         camera_fps: int,
         human_detection_path: str,
         face_detection_path: str,

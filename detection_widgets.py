@@ -1,4 +1,5 @@
 from abc import ABC
+import os
 
 from ultralytics import YOLO
 from deepface import DeepFace
