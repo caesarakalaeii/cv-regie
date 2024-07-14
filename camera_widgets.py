@@ -133,7 +133,7 @@ class CameraWidget:
             self.frame.shape, persons, faces
         )
         
-    def get_detection_bounds(self) -> list[Box]:
+    def get_detection_bounds(self):
         return self.widgets[0].get_result_data()
     
     def annotate_frame(self) -> np.ndarray:

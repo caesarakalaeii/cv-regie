@@ -151,7 +151,7 @@ def get_processed_frame(
             return frame
         
 # https://stackoverflow.com/questions/57577445/list-available-cameras-opencv-python
-def list_ports(port_range: int, l:Logger) -> tuple[list[int], list[int]]:
+def list_ports(port_range: int, l:Logger):
     """
     Test the ports and returns a tuple with the available ports
     and the ones that are working.

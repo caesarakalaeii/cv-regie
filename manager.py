@@ -11,7 +11,7 @@ class MODES:
 
 class CV_Manager(object):
     
-    def __init__(self, camera_ports:list[int] = None,
+    def __init__(self, camera_ports = None,
                  output_mode = MODES.CV,
                  database_path = None, 
                  raw_resolution = (720, 1280),

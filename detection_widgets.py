@@ -30,7 +30,7 @@ class DetectionWidget (ABC):
     def count_ids(self):
         raise NotImplementedError()
 
-    def get_result_data(self) -> list[Box]:
+    def get_result_data(self):
         raise NotImplementedError()
     
     def update_frame(self, frame):
@@ -206,7 +206,7 @@ class FaceWidget(DetectionWidget):
             counts = max(self.result[0].boxes.id.int().cpu().tolist())
         return counts
 
-    def get_result_data(self)-> list[Box]:
+    def get_result_data(self):
         data = []
         if self.result is None:
             return data
