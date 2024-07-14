@@ -13,6 +13,7 @@ from logger import Logger
 from timeit import default_timer as timer
 from output_widgets import ImageShowWidget
 import numpy as np
+from shut_down_coordinator import Shutdown_Coordinator
 
 
 
@@ -30,10 +31,11 @@ class CameraWidget:
         human_detection_path: str,
         face_detection_path: str,
         database_path,
-        l= Logger()
+        l= Logger(),
+        sc = Shutdown_Coordinator()
     ):
 
-        
+        self.sc = sc
         self.port = port
         self.resolution = resolution
         self.camera_fps = camera_fps
@@ -51,9 +53,16 @@ class CameraWidget:
         self.cap.set(cv.CAP_PROP_FPS, self.camera_fps)
 
         
-        human_detection_widget = HumanWidget(human_detection_path,l)
-        face_detection_widget = FaceWidget(face_detection_path,l)
-        # deepface_detection_widget = DeepFaceWidget(database_path,l)
+        human_detection_widget = HumanWidget(
+                                            human_detection_path,
+                                            l,
+                                            self.sc
+                                            ) 
+        face_detection_widget = FaceWidget(
+                                            face_detection_path,
+                                            l,
+                                            self.sc)
+        # deepface_detection_widget = DeepFaceWidget(database_path,l, self.sc)
         self.widgets = [
             human_detection_widget,
             face_detection_widget,
@@ -79,11 +88,13 @@ class CameraWidget:
         frame_counter = 0
         try:
             while not self.stopped:
+                if not self.sc.running():
+                    self.l.warning('Shutdown Detected exiting')
+                    self.stop()
+                    break
                 self.grabbed, self.frame = self.cap.read()
                 self.init_widgets()
                 if self.grabbed:
-                    
-                    
                     self.update_widgets()
                     frame_counter += 1
                     time_end = timer()
@@ -98,6 +109,8 @@ class CameraWidget:
             raise e
 
     def init_widgets(self):
+        if not self.sc.running():
+            self.stop()
         widget: DetectionWidget
         for widget in self.widgets:
             if widget.stopped:
@@ -114,11 +127,13 @@ class CameraWidget:
         widget: DetectionWidget
         self.stopped = True
         self.l.warning(f'Stopping CameraWidget {self.port}')
-        
+        self.sc.stop()
         for widget in self.widgets:
             if not widget.stopped:
                 widget.stop()
         self.cap.release()
+        exit(1)
+        
 
     def get_ranking(self):
         if self.frame is None:

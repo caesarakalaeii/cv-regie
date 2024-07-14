@@ -3,6 +3,7 @@ from output_widgets import ImageShowWidget, OutputWiget
 from utilities import calculate_frame_box_static, get_processed_frame
 from threading import Thread
 from logger import Logger
+from shut_down_coordinator import Shutdown_Coordinator
 
 class MODES:
     CV = 1
@@ -20,13 +21,15 @@ class CV_Manager(object):
                  human_detection_path: str = None,
                  face_detection_path: str = None,
                  debug:bool = False,
-                 l:Logger = Logger()
+                 l:Logger = Logger(),
+                 sc: Shutdown_Coordinator = Shutdown_Coordinator()
                 ) -> None:
         self.camera_widgets = []
         self.ranking = []
         self.debug = debug
         self.debug_outputs = {}
         self.l = l
+        self.sc = sc
         l.passingblue('Creating Manager')
         
         if debug:
@@ -41,14 +44,20 @@ class CV_Manager(object):
                              human_detection_path, 
                              face_detection_path, 
                              database_path,
-                             l)
+                             l, 
+                             self.sc
+                             )
             self.camera_widgets.append(
                 camera
             )
-            
             if debug:
                 self.l.passing('Debug flag found, generating debug widgets')
-                self.debug_outputs[cam].append(ImageShowWidget(f'Camera {cam} Raw', l))
+                self.debug_outputs[cam].append(
+                                                ImageShowWidget(f'Camera {cam} Raw',
+                                                                l,
+                                                                self.sc
+                                                                )
+                                               )
                                 
             self.ranking.append(0)
         self.l.info(self.debug_outputs)
@@ -82,6 +91,9 @@ class CV_Manager(object):
         box = None
         try:
             while self.running:
+                if not self.sc.running():
+                    self.l.warning('Shutdown Detected exiting')
+                    break
                 self.l.info('Calculating rankings')
                 cam_widget: CameraWidget
                 for i, cam_widget in enumerate(self.camera_widgets):
@@ -112,14 +124,25 @@ class CV_Manager(object):
         except Exception as e:
             self.l.error(e.with_traceback(e.__traceback__))
             self.running = False
+            self.sc.stop()
             raise e
+        self.sc.stop()
+        exit(1)
             
             
     def start_image_show_no_threading(self):
         self.l.passingblue('Starting CV ImageShow')
         running = True
+        # 'Start' outputs here for compatibility reasons
+        for outputs in self.debug_outputs.values():
+            output: ImageShowWidget
+            for output in outputs:
+                output.start()
         while running:
+            if not self.sc.running():
+                break
             for outputs in self.debug_outputs.values():
+                output: ImageShowWidget
                 for output in outputs:
                     output.show_image()
                     

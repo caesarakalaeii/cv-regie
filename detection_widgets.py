@@ -10,6 +10,8 @@ from logger import Logger
 from output_widgets import ImageShowWidget
 import cv2 as cv
 
+from shut_down_coordinator import Shutdown_Coordinator
+
 class DetectionWidget (ABC):
     '''
     Absract class to generalize detection widgets
@@ -19,13 +21,18 @@ class DetectionWidget (ABC):
     stopped: bool
     detection: bool
     widget_type = "Base"
+    sc: Shutdown_Coordinator
+    l: Logger
     
     def start(self):
         raise NotImplementedError()
     
     def stop(self):
         self.stopped = True
+        self.sc.stop()
         self.l.warning(f'Stopping {self.widget_type}')
+        exit(1)
+        
     
     def count_ids(self):
         raise NotImplementedError()
@@ -43,6 +50,12 @@ class DetectionWidget (ABC):
         
     def run_detection(self):
         raise NotImplementedError()
+    
+    def running(self):
+        if not self.sc.running():
+            self.l.warning('Shutdown Detected exiting')
+            self.stop()
+        return not self.stopped
 
 
 class HumanWidget(DetectionWidget):
@@ -51,9 +64,9 @@ class HumanWidget(DetectionWidget):
     
     
 
-    def __init__(self, human_detection_path: str, l= Logger()):
+    def __init__(self, human_detection_path: str, l= Logger(), sc = Shutdown_Coordinator()):
 
-
+        self.sc = sc
         self.detection = False
         self.human_detection_path = human_detection_path
         self.human_detection_score = 0
@@ -79,7 +92,7 @@ class HumanWidget(DetectionWidget):
 
     def run(self):
         try:
-            while not self.stopped:
+            while self.running():
                 if self.widget_frame is None:
                     continue
                 self.run_detection()
@@ -147,12 +160,12 @@ class FaceWidget(DetectionWidget):
     
     
 
-    def __init__(self,face_detection_path: str, l = Logger()):
+    def __init__(self,face_detection_path: str, l = Logger(), sc = Shutdown_Coordinator()):
         self.detection = False
         self.face_detection_path = face_detection_path
         self.face_detection_score = 0
         self.face_detection_data = [[], [], [], [], []]
-        
+        self.sc = sc
         self.l = l
         self.l.info('Creating FaceWidget')
         self.result = None
@@ -174,7 +187,7 @@ class FaceWidget(DetectionWidget):
 
     def run(self):
         try:
-            while not self.stopped:
+            while self.running():
                 if self.widget_frame is None:
                     continue
                 self.run_detection()
@@ -239,10 +252,10 @@ class DeepFaceWidget(DetectionWidget):
     
     
 
-    def __init__(self,database_path: str, l= Logger()):
+    def __init__(self,database_path: str, l= Logger(), sc = Shutdown_Coordinator()):
 
         self.database_path = database_path
-
+        self.sc = sc
         self.deepface_detections_data = [[], [], [], [], []]
         self.result = None
         
@@ -263,7 +276,7 @@ class DeepFaceWidget(DetectionWidget):
 
     def run(self):
         try:
-            while not self.stopped:
+            while self.running():
                 if self.widget_frame is None:
                     continue
                 self.run_detection()

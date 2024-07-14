@@ -4,10 +4,11 @@ import numpy as np
 from logger import Logger
 import cv2 as cv
 from threading import Thread
+from shut_down_coordinator import Shutdown_Coordinator
 
 class OutputWiget(ABC):
     frame: np.ndarray
-    
+    sc: Shutdown_Coordinator
     
     def update_frame(self, frame):
         self.frame = frame
@@ -32,8 +33,10 @@ class ImageShowWidget(OutputWiget):
     def __init__(
         self,
         window_title:str,
-        l= Logger()
+        l= Logger(),
+        sc = Shutdown_Coordinator()
     ):
+        self.sc = sc
         self.l = l
         self.stopped = True
         self.window_title = window_title
@@ -50,12 +53,22 @@ class ImageShowWidget(OutputWiget):
         self.l.passingblue("Starting output widget")
 
         while not self.stopped:
+            if not self.sc.running():
+                    self.l.warning('Shutdown Detected')
+                    self.stop()
+                    break
             self.show_image()
        
-    def show_image(self):     
+    def show_image(self):
+        if self.stopped:
+            self.sc.stop()
+            return
+        if not self.sc.running(): 
+            self.stop()
+            return    
         if self.frame is None:
-                #self.l.info("no frame recieved")
-                return
+            #self.l.info("no frame recieved")
+            return
         try:
             cv.imshow(self.window_title, self.frame)
         except Exception as e:
@@ -68,6 +81,7 @@ class ImageShowWidget(OutputWiget):
     def stop(self):
         self.l.warning('Stopping Output Widget')
         self.stopped = True
+        self.sc.stop()
         cv.destroyAllWindows()
         
        

@@ -4,6 +4,7 @@
 """
 
 from manager import CV_Manager, MODES
+from shut_down_coordinator import Shutdown_Coordinator
 from utilities import os_sensitive_backslashes
 from logger import Logger
 import os
@@ -25,7 +26,7 @@ def ensure_dir_exists(directory):
 
 if __name__ == '__main__':
    
-    ports = [0,3,8]
+    ports = [0]
     resolution = [720, 1280]
     camera_fps = 30
 
@@ -33,7 +34,7 @@ if __name__ == '__main__':
     face_detection_path = os_sensitive_backslashes("models/face/yolov8n-face.pt")
     database_path = os_sensitive_backslashes("database")
     ensure_dir_exists(database_path)
-
+    l = Logger(True)
     manager = CV_Manager(
         ports,
         MODES.CV,
@@ -44,7 +45,8 @@ if __name__ == '__main__':
         human_detection_path,
         face_detection_path,
         debug=True,
-        l = Logger(True)
+        l = l,
+        sc= Shutdown_Coordinator(l)
         )
     manager.run()
     manager.start_image_show_no_threading()
