@@ -57,7 +57,7 @@ def os_sensitive_backslashes(string: str):
     return string.replace("\\", "/")
 
 
-def pad_to_16by9(box: Box, target_shape=(16, 9)) -> Box:
+def pad_to_target_shape(box: Box, target_shape=(16, 9)) -> Box:
     box_width = box.width()
     box_height = box.height()
     box_ratio = box_width / box_height
@@ -71,12 +71,9 @@ def pad_to_16by9(box: Box, target_shape=(16, 9)) -> Box:
         new_y2 = box.y2 + delta_height / 2
         # Ensure coordinates are non-negative
         if new_y1 < 0:
-            delta_height = box.y1 - new_y1
             new_y1 = 0
-            new_y2 = box_height + delta_height
-
-        box.y1 = int(new_y1)
-        box.y2 = int(new_y2)
+            new_y2 = new_height
+        new_x1, new_x2 = box.x1, box.x2
     else:
         # Current box is taller than target ratio, adjust width
         new_width = box_height * target_ratio
@@ -85,14 +82,11 @@ def pad_to_16by9(box: Box, target_shape=(16, 9)) -> Box:
         new_x2 = box.x2 + delta_width / 2
         # Ensure coordinates are non-negative
         if new_x1 < 0:
-            delta_width = box.x1 - new_x1
             new_x1 = 0
-            new_x2 = box_width + delta_width
-        box.x1 = int(new_x1)
-        box.x2 = int(new_x2)
+            new_x2 = new_width
+        new_y1, new_y2 = box.y1, box.y2
 
-    return box
-
+    return Box(int(new_x1), int(new_y1), int(new_x2), int(new_y2))
 
 def calculate_ranking(
     frame_shape, person_count, face_count, max_res=(720, 1280)
@@ -130,7 +124,7 @@ def calculate_frame_box_static(boxes ) -> Box:
             highest_y = box.y2
 
     box = Box(lowest_x, lowest_y, highest_x, highest_y)
-    box = pad_to_16by9(box, target_shape=(16, 9))
+    box = pad_to_target_shape(box, target_shape=(16, 9))
 
     return box
 

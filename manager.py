@@ -63,7 +63,7 @@ class CV_Manager(object):
         self.l.info(self.debug_outputs)
         if output_mode == MODES.CV:
             self.l.passing('Mode is CV, Creating Output Widget')
-            self.output = ImageShowWidget('Output', l)
+            self.output = ImageShowWidget('Output', l, self.sc)
         elif output_mode == MODES.VCAM:
             self.l.passing('Mode is VCAM, Creating Output Widget')
             raise NotImplementedError("Virtual Webcam not yet supported")
