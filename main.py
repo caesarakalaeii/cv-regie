@@ -15,7 +15,7 @@ import os
 
 if __name__ == '__main__':
    
-    ports = [0]
+    ports = [0,1]
     resolution = [720, 1280]
     camera_fps = 30
 

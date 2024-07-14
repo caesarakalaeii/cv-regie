@@ -108,7 +108,6 @@ class HumanWidget(DetectionWidget):
                     self.detection = True
                 else:
                     self.detection = False
-                self.widget_frame = None
         except Exception as e:
             self.l.error(e.with_traceback(e.__traceback__))
             self.stop()
@@ -207,7 +206,6 @@ class FaceWidget(DetectionWidget):
                     self.detection = True
                 else:
                     self.detection = False
-                self.widget_frame = None
         except Exception as e:
             self.l.error(e.with_traceback(e.__traceback__))
             self.stop()
@@ -296,7 +294,6 @@ class DeepFaceWidget(DetectionWidget):
                     self.run_detection()
                 if self.result is None:
                     continue
-                self.widget_frame = None
         except Exception as e:
             self.l.error(e.with_traceback(e.__traceback__))
             self.stop()

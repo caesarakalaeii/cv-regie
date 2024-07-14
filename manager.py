@@ -85,40 +85,45 @@ class CV_Manager(object):
             self.output.start()
             self.thread.start()
         self.l.passing('Finished Setting up Manager')
-            
+        
+    def update_cameras(self):
+        cam_widget: CameraWidget
+        for i, cam_widget in enumerate(self.camera_widgets):
+            self.ranking[i]=cam_widget.get_ranking()
+            if self.debug:
+                debug:OutputWiget
+                for debug in self.debug_outputs[cam_widget.port]:
+                    debug.update_frame(cam_widget.frame)
+        
+    def get_cropped_frame_from_best_feed(self):
+        self.l.info('Calculating rankings')
+        best_feed = max(enumerate(self.ranking),key=lambda x: x[1])[0] #find index of highest ranking
+        self.l.info(f'Best feed is feed{best_feed} with {self.ranking[best_feed]}')
+        
+        self.l.info('Processing frame')
+        best_widget:CameraWidget = self.camera_widgets[best_feed]
+        best_frame = best_widget.frame
+        if best_frame is None or self.ranking[best_feed] == 0:
+            return best_frame
+        boxes = best_widget.get_detection_bounds()
+        if boxes == []:
+            self.l.warning('Boxes empty, continuing')
+        else:
+            box = calculate_frame_box_static(boxes)
+        if box is None:
+            return best_frame
+        else:
+            return get_processed_frame(box, best_widget.frame)
+    
     def loop(self):
-        box = None
         try:
             while self.running:
                 if not self.sc.running():
                     self.l.warning('Shutdown Detected exiting')
                     break
-                self.l.info('Calculating rankings')
-                cam_widget: CameraWidget
-                for i, cam_widget in enumerate(self.camera_widgets):
-                    self.ranking[i]=cam_widget.get_ranking()
-                    if self.debug:
-                        debug:OutputWiget
-                        for debug in self.debug_outputs[cam_widget.port]:
-                            debug.update_frame(cam_widget.frame)
-                    
-                best_feed = max(enumerate(self.ranking),key=lambda x: x[1])[0] #find index of highest ranking
-                self.l.info(f'Best feed is feed{best_feed} with {self.ranking[best_feed]}')
+                self.update_cameras()
+                cropped_frame = self.get_cropped_frame_from_best_feed()
                 
-                self.l.info('Processing frame')
-                best_widget:CameraWidget = self.camera_widgets[best_feed]
-                best_frame = best_widget.frame
-                if best_frame is None or self.ranking[best_feed] == 0:
-                    continue
-                boxes = best_widget.get_detection_bounds()
-                if boxes == []:
-                    self.l.warning('Boxes empty, continuing')
-                else:
-                    box = calculate_frame_box_static(boxes)
-                if box is None:
-                    cropped_frame = best_widget.frame
-                else:
-                    cropped_frame = get_processed_frame(box, best_widget.frame)
                 self.output.update_frame(cropped_frame)
         except Exception as e:
             self.l.error(e.with_traceback(e.__traceback__))
