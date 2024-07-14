@@ -33,7 +33,7 @@ class DetectionWidget (ABC):
         self.stopped = True
         self.sc.stop()
         self.l.warning(f'Stopping {self.widget_type}')
-        exit(1)
+        exit()
         
     
     def count_ids(self):
@@ -67,7 +67,10 @@ class HumanWidget(DetectionWidget):
     
     
 
-    def __init__(self, human_detection_path: str, l= Logger(), sc = Shutdown_Coordinator(), detection_frequency = 10):
+    def __init__(self, human_detection_path: str,
+                 l= Logger(), 
+                 sc = Shutdown_Coordinator(), 
+                 detection_frequency = 10):
 
         self.detection_frequency = detection_frequency
         self.sc = sc
@@ -102,12 +105,6 @@ class HumanWidget(DetectionWidget):
                     continue
                 if self.frame_count % self.detection_frequency == 0: # only run detection every 10th frame yourself
                     self.run_detection()
-                if self.result is None:
-                    continue
-                if len(self.result) != 0:
-                    self.detection = True
-                else:
-                    self.detection = False
         except Exception as e:
             self.l.error(e.with_traceback(e.__traceback__))
             self.stop()
@@ -115,13 +112,16 @@ class HumanWidget(DetectionWidget):
                 
     
     def run_detection(self):
-        self.result = self.model.track(
-                    self.widget_frame,
-                    tracker="bytetrack.yaml",
-                    imgsz=320,
-                    classes=[0],
-                    verbose=False,
-                )
+        try:
+            self.result = self.model.track(
+                        self.widget_frame,
+                        tracker="bytetrack.yaml",
+                        imgsz=320,
+                        classes=[0],
+                        verbose=False,
+                    )
+        except AttributeError as e:
+            self.l.warning(f'Detection failed, continuing: {e}')
 
     def count_ids(self):
         counts = 0
@@ -167,7 +167,10 @@ class FaceWidget(DetectionWidget):
     
     
 
-    def __init__(self,face_detection_path: str, l = Logger(), sc = Shutdown_Coordinator(), detection_frequency = 10):
+    def __init__(self,face_detection_path: str,
+                 l = Logger(),
+                 sc = Shutdown_Coordinator(),
+                 detection_frequency = 10):
         self.detection = False
         self.face_detection_path = face_detection_path
         self.face_detection_score = 0
@@ -200,25 +203,23 @@ class FaceWidget(DetectionWidget):
                     continue
                 if self.frame_count % self.detection_frequency == 0: # only run detection every 10th frame yourself
                     self.run_detection()
-                if self.result is None:
-                    continue
-                if len(self.result) != 0:
-                    self.detection = True
-                else:
-                    self.detection = False
         except Exception as e:
             self.l.error(e.with_traceback(e.__traceback__))
             self.stop()
             raise e
                 
     def run_detection(self):
-        self.result = self.model.track(
-                    self.widget_frame,
-                    tracker="bytetrack.yaml",
-                    imgsz=320,
-                    classes=[0],
-                    verbose=False,
-                )
+        try:
+            self.result = self.model.track(
+                        self.widget_frame,
+                        tracker="bytetrack.yaml",
+                        imgsz=320,
+                        classes=[0],
+                        verbose=False,
+                    )
+        except AttributeError as e:
+            self.l.warning(f'Detection failed, continuing: {e}')
+
         
 
     def count_ids(self):
@@ -262,7 +263,10 @@ class DeepFaceWidget(DetectionWidget):
     
     
 
-    def __init__(self,database_path: str, l= Logger(), sc = Shutdown_Coordinator(), detection_frequency = 10):
+    def __init__(self,database_path: str,
+                 l= Logger(),
+                 sc = Shutdown_Coordinator(),
+                 detection_frequency = 10):
 
         self.database_path = database_path
         self.sc = sc
@@ -292,8 +296,6 @@ class DeepFaceWidget(DetectionWidget):
                     continue
                 if self.frame_count % self.detection_frequency == 0: # only run detection every 10th frame yourself
                     self.run_detection()
-                if self.result is None:
-                    continue
         except Exception as e:
             self.l.error(e.with_traceback(e.__traceback__))
             self.stop()
@@ -316,14 +318,18 @@ class DeepFaceWidget(DetectionWidget):
         return data
     
     def run_detection(self):
-        self.result = DeepFace.find(
-                    img_path=np.array(self.widget_frame),
-                    db_path=self.database_path,
-                    enforce_detection=False,
-                    silent=True,
-                    detector_backend="yolov8",
-                    distance_metric="euclidean_l2"
-                )
+        try:
+            self.result = DeepFace.find(
+                        img_path=np.array(self.widget_frame),
+                        db_path=self.database_path,
+                        enforce_detection=False,
+                        silent=True,
+                        detector_backend="yolov8",
+                        distance_metric="euclidean_l2"
+                    )
+        except AttributeError as e:
+            self.l.warning(f'Detection failed, continuing: {e}')
+
     
     
 
@@ -378,4 +384,4 @@ if __name__ == '__main__':
         l.error(f'{e}\nStopping widgets')
         for widget in min_ex:
             widget.stop()
-        exit(1)
+        exit()

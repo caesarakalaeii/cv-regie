@@ -1,5 +1,5 @@
 from camera_widgets import CameraWidget
-from output_widgets import ImageShowWidget, OutputWiget
+from output_widgets import ImageShowWidget, OutputWiget, VirtualWebcamShowWidget
 from utilities import calculate_frame_box_static, get_processed_frame
 from threading import Thread
 from logger import Logger
@@ -30,6 +30,7 @@ class CV_Manager(object):
         self.debug_outputs = {}
         self.l = l
         self.sc = sc
+        self.output_mode = output_mode
         l.passingblue('Creating Manager')
         
         if debug:
@@ -65,35 +66,41 @@ class CV_Manager(object):
             self.output = ImageShowWidget('Output', l, self.sc)
         elif output_mode == MODES.VCAM:
             self.l.passing('Mode is VCAM, Creating Output Widget')
-            raise NotImplementedError("Virtual Webcam not yet supported")
+            target_data = (target_resolution[0], target_resolution[1], raw_fps)
+            self.output = VirtualWebcamShowWidget('Output', l, self.sc, target_data)
         else:
             raise ValueError("Mode not recognized")
-        self.thread = Thread(target=self.loop)
+        self.thread = Thread(target=self.run)
         self.running = False
         
-    def run(self):
+    def start(self):
         self.l.passingblue("Starting manager")
         
         if not self.running:
             self.running = True
             self.start_cam_widgets()
-            if self.debug:
-                debug:OutputWiget
-                for debugs in self.debug_outputs.values():
-                    for debug in debugs:
-                        debug.start()
+            self.start_debug_widgets()
+            
             self.output.start()
             self.thread.start()
+            
         self.l.passing('Finished Setting up Manager')
         
-    def update_cameras(self):
+    def start_debug_widgets(self):
+        if self.debug:
+            debug:OutputWiget
+            for debugs in self.debug_outputs.values():
+                for debug in debugs:
+                    debug.start()
+    
+    def update_debug_outputs(self):
         cam_widget: CameraWidget
-        for i, cam_widget in enumerate(self.camera_widgets):
-            self.ranking[i]=cam_widget.get_ranking()
-            if self.debug:
+        if self.debug:
+            for i, cam_widget in enumerate(self.camera_widgets):
+                self.ranking[i]=cam_widget.get_ranking()
                 debug:OutputWiget
                 for debug in self.debug_outputs[cam_widget.port]:
-                    debug.update_frame(cam_widget.frame)
+                    debug.update_frame(cam_widget.annotate_frame())
         
     def get_cropped_frame_from_best_feed(self):
         box = None
@@ -115,13 +122,13 @@ class CV_Manager(object):
         else:
             return get_processed_frame(box, best_widget.frame)
     
-    def loop(self):
+    def run(self):
         try:
             while self.running:
                 if not self.sc.running():
                     self.l.warning('Shutdown Detected exiting')
                     break
-                self.update_cameras()
+                self.update_debug_outputs()
                 cropped_frame = self.get_cropped_frame_from_best_feed()
                 
                 self.output.update_frame(cropped_frame)
@@ -131,7 +138,7 @@ class CV_Manager(object):
             self.sc.stop()
             raise e
         self.sc.stop()
-        exit(1)
+        exit()
             
             
     def start_image_show_no_threading(self):
@@ -139,18 +146,18 @@ class CV_Manager(object):
         running = True
         # 'Start' outputs here for compatibility reasons
         for outputs in self.debug_outputs.values():
-            output: ImageShowWidget
             for output in outputs:
                 output.start()
         while running:
             if not self.sc.running():
+                self.running = False
                 break
             for outputs in self.debug_outputs.values():
-                output: ImageShowWidget
                 for output in outputs:
                     output.show_image()
                     
-            self.output.show_image()
+            if self.output_mode == MODES.CV:
+                self.output.show_image()
             
                 
     def start_cam_widgets(self):

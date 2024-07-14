@@ -120,8 +120,7 @@ class CameraWidget:
     def update_widgets(self):
         widget: DetectionWidget
         for widget in self.widgets:
-            if not widget.stopped:
-                widget.update_frame(self.frame)
+            widget.update_frame(self.frame)
     
     def stop(self):
         widget: DetectionWidget
@@ -132,7 +131,7 @@ class CameraWidget:
             if not widget.stopped:
                 widget.stop()
         self.cap.release()
-        exit(1)
+        exit()
         
 
     def get_ranking(self):
@@ -222,5 +221,5 @@ if __name__ == '__main__':
             widget.stop()
         for cap in captures:
             cap.stop()
-        exit(1)
+        exit()
 

@@ -15,3 +15,4 @@ lap
 lapx>=0.5.2
 ultralytics
 tf-keras
+pyvirtualcam
