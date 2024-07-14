@@ -35,7 +35,6 @@ class CV_Manager(object):
         if debug:
             for cam in camera_ports:
                 self.debug_outputs[cam] = []
-            
         l.passingblue(f'Creating CameraWidgets {camera_ports}')
         for cam in camera_ports:
             camera = CameraWidget(cam, 

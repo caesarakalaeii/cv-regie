@@ -23,6 +23,8 @@ class DetectionWidget (ABC):
     widget_type = "Base"
     sc: Shutdown_Coordinator
     l: Logger
+    frame_count: int
+    detection_frequency: int
     
     def start(self):
         raise NotImplementedError()
@@ -42,6 +44,7 @@ class DetectionWidget (ABC):
     
     def update_frame(self, frame):
         self.widget_frame = frame
+        self.frame_count += 1
         
     def plot_results(self, frame = None) -> np.ndarray:
         if frame is None:
@@ -64,8 +67,9 @@ class HumanWidget(DetectionWidget):
     
     
 
-    def __init__(self, human_detection_path: str, l= Logger(), sc = Shutdown_Coordinator()):
+    def __init__(self, human_detection_path: str, l= Logger(), sc = Shutdown_Coordinator(), detection_frequency = 10):
 
+        self.detection_frequency = detection_frequency
         self.sc = sc
         self.detection = False
         self.human_detection_path = human_detection_path
@@ -81,6 +85,7 @@ class HumanWidget(DetectionWidget):
 
         self.thread = Thread(target=self.run)
         self.stopped = True
+        self.frame_count = 0
         
     
     def start(self):
@@ -95,7 +100,10 @@ class HumanWidget(DetectionWidget):
             while self.running():
                 if self.widget_frame is None:
                     continue
-                self.run_detection()
+                if self.frame_count % self.detection_frequency == 0: # only run detection every 10th frame yourself
+                    self.run_detection()
+                if self.result is None:
+                    continue
                 if len(self.result) != 0:
                     self.detection = True
                 else:
@@ -160,16 +168,17 @@ class FaceWidget(DetectionWidget):
     
     
 
-    def __init__(self,face_detection_path: str, l = Logger(), sc = Shutdown_Coordinator()):
+    def __init__(self,face_detection_path: str, l = Logger(), sc = Shutdown_Coordinator(), detection_frequency = 10):
         self.detection = False
         self.face_detection_path = face_detection_path
         self.face_detection_score = 0
         self.face_detection_data = [[], [], [], [], []]
         self.sc = sc
         self.l = l
+        self.detection_frequency = detection_frequency
         self.l.info('Creating FaceWidget')
         self.result = None
-
+        self.frame_count = 0
         self.model = YOLO(face_detection_path)
 
         self.widget_frame = None
@@ -190,7 +199,10 @@ class FaceWidget(DetectionWidget):
             while self.running():
                 if self.widget_frame is None:
                     continue
-                self.run_detection()
+                if self.frame_count % self.detection_frequency == 0: # only run detection every 10th frame yourself
+                    self.run_detection()
+                if self.result is None:
+                    continue
                 if len(self.result) != 0:
                     self.detection = True
                 else:
@@ -252,13 +264,14 @@ class DeepFaceWidget(DetectionWidget):
     
     
 
-    def __init__(self,database_path: str, l= Logger(), sc = Shutdown_Coordinator()):
+    def __init__(self,database_path: str, l= Logger(), sc = Shutdown_Coordinator(), detection_frequency = 10):
 
         self.database_path = database_path
         self.sc = sc
         self.deepface_detections_data = [[], [], [], [], []]
         self.result = None
-        
+        self.frame_count = 0
+        self.detection_frequency = detection_frequency
         self.l = l
         self.l.info('Creating DeepFaceWidget')
 
@@ -279,7 +292,10 @@ class DeepFaceWidget(DetectionWidget):
             while self.running():
                 if self.widget_frame is None:
                     continue
-                self.run_detection()
+                if self.frame_count % self.detection_frequency == 0: # only run detection every 10th frame yourself
+                    self.run_detection()
+                if self.result is None:
+                    continue
                 self.widget_frame = None
         except Exception as e:
             self.l.error(e.with_traceback(e.__traceback__))

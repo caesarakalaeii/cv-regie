@@ -100,7 +100,18 @@ def calculate_ranking(
 
     return ranking
 
+def ensure_dir_exists(directory):
+    """
+    Check if a given directory exists, and if not, creates it.
 
+    Args:
+        directory (str): The path of the directory to check/create.
+    """
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+        print(f"Directory '{directory}' created.")
+    else:
+        print(f"Directory '{directory}' already exists.")
 
 
 def calculate_frame_box_static(boxes ) -> Box:
