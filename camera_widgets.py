@@ -157,6 +157,10 @@ class CameraWidget:
             return_frame = widget.plot_results(return_frame)
 
         return return_frame
+    
+    
+    
+
 
 if __name__ == '__main__':
     

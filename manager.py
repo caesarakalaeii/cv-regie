@@ -96,10 +96,10 @@ class CV_Manager(object):
                     debug.update_frame(cam_widget.frame)
         
     def get_cropped_frame_from_best_feed(self):
+        box = None
         self.l.info('Calculating rankings')
         best_feed = max(enumerate(self.ranking),key=lambda x: x[1])[0] #find index of highest ranking
         self.l.info(f'Best feed is feed{best_feed} with {self.ranking[best_feed]}')
-        
         self.l.info('Processing frame')
         best_widget:CameraWidget = self.camera_widgets[best_feed]
         best_frame = best_widget.frame
