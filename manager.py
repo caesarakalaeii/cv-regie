@@ -1,3 +1,4 @@
+import camera_widgets
 from camera_widgets import CameraWidget
 from output_widgets import ImageShowWidget, OutputWiget, VirtualWebcamShowWidget
 from utilities import calculate_frame_box_static, get_processed_frame
@@ -13,18 +14,20 @@ class MODES:
 
 class CvManager(object):
 
-    def __init__(self, camera_ports=None,
-                 output_mode=MODES.CV,
-                 database_path=None,
-                 raw_resolution=(720, 1280),
-                 raw_fps=30,
-                 target_resolution=(720, 1280),
-                 human_detection_path: str = None,
-                 face_detection_path: str = None,
-                 debug: bool = False,
-                 l: Logger = Logger(),
-                 sc: Shutdown_Coordinator = Shutdown_Coordinator()
-                 ) -> None:
+    def __init__(
+        self,
+        camera_ports=None,
+        output_mode=MODES.CV,
+        database_path=None,
+        raw_resolution=(720, 1280),
+        raw_fps=30,
+        target_resolution=(720, 1280),
+        human_detection_path: str = None,
+        face_detection_path: str = None,
+        debug: bool = False,
+        l: Logger = Logger(),
+        sc: Shutdown_Coordinator = Shutdown_Coordinator(),
+    ) -> None:
         self.camera_widgets = []
         self.ranking = []
         self.debug = debug
@@ -32,43 +35,44 @@ class CvManager(object):
         self.l = l
         self.sc = sc
         self.output_mode = output_mode
-        l.passingblue('Creating Manager')
+        l.passingblue("Creating Manager")
 
         if debug:
-            for cam in camera_ports:
-                self.debug_outputs[cam] = []
-        l.passingblue(f'Creating CameraWidgets {camera_ports}')
-        for cam in camera_ports:
-            camera = CameraWidget(cam,
-                                  raw_resolution,
-                                  raw_fps,
-                                  human_detection_path,
-                                  face_detection_path,
-                                  database_path,
-                                  l,
-                                  self.sc
-                                  )
-            self.camera_widgets.append(
-                camera
+            for cam_port in camera_ports:
+                self.debug_outputs[cam_port] = []
+        l.passingblue(f"Creating CameraWidgets {camera_ports}")
+        for cam_port in camera_ports:
+            camera = CameraWidget(
+                cam_port,
+                raw_resolution,
+                raw_fps,
+                human_detection_path,
+                face_detection_path,
+                database_path,
+                l,
+                self.sc,
             )
+            self.camera_widgets.append(camera)
             if debug:
-                self.l.passing('Debug flag found, generating debug widgets')
-                self.debug_outputs[cam].append(
-                    ImageShowWidget(f'Camera {cam} Raw',
-                                    l,
-                                    self.sc
-                                    )
+                self.l.passing("Debug flag found, generating debug widgets")
+                self.debug_outputs[cam_port].append(
+                    ImageShowWidget(f"Camera {cam_port} Raw", l, self.sc)
                 )
+                for widget in camera.widgets:
+                    self.debug_outputs[cam_port].append(
+                        ImageShowWidget(
+                            f"Camera {cam_port} {widget.widget_type}", l, self.sc
+                        )
+                    )
 
             self.ranking.append(0)
-        self.l.info(self.debug_outputs)
         if output_mode == MODES.CV:
-            self.l.passing('Mode is CV, Creating Output Widget')
-            self.output = ImageShowWidget('Output', l, self.sc)
+            self.l.passing("Mode is CV, Creating Output Widget")
+            self.output = ImageShowWidget("Output", l, self.sc)
         elif output_mode == MODES.VCAM:
-            self.l.passing('Mode is VCAM, Creating Output Widget')
+            self.l.passing("Mode is VCAM, Creating Output Widget")
             target_data = (target_resolution[0], target_resolution[1], raw_fps)
-            self.output = VirtualWebcamShowWidget('Output', l, self.sc, target_data)
+            self.output = VirtualWebcamShowWidget("Output", l, self.sc, target_data)
         else:
             raise ValueError("Mode not recognized")
         self.thread = Thread(target=self.run)
@@ -85,7 +89,7 @@ class CvManager(object):
             self.output.start()
             self.thread.start()
 
-        self.l.passing('Finished Setting up Manager')
+        self.l.passing("Finished Setting up Manager")
 
     def start_debug_widgets(self):
         if self.debug:
@@ -94,28 +98,41 @@ class CvManager(object):
                 for debug in debugs:
                     debug.start()
 
+    def calc_ranking(self):
+        for i, cam_widget in enumerate(self.camera_widgets):
+            self.ranking[i] = cam_widget.get_ranking()
+
     def update_debug_outputs(self):
         cam_widget: CameraWidget
         if self.debug:
-            for i, cam_widget in enumerate(self.camera_widgets):
-                self.ranking[i] = cam_widget.get_ranking()
+            for cam_index, outputs in enumerate(self.debug_outputs.values()):
+                cam = self.camera_widgets[cam_index]
                 debug: OutputWiget
-                for debug in self.debug_outputs[cam_widget.port]:
-                    debug.update_frame(cam_widget.annotate_frame())
+                for i in range(len(outputs)):
+                    if i == 0:
+                        outputs[i].update_frame(
+                            cam.frame
+                        )  # first debug widget is raw image
+                    else:
+                        detection_widget = cam.widgets[i - 1]
+                        outputs[i].update_frame(detection_widget.plot_results())
 
     def get_cropped_frame_from_best_feed(self):
         box = None
-        self.l.info('Calculating rankings')
-        best_feed = max(enumerate(self.ranking), key=lambda x: x[1])[0]  #find index of highest ranking
-        self.l.info(f'Best feed is feed{best_feed} with {self.ranking[best_feed]}')
-        self.l.info('Processing frame')
+        self.l.info("Calculating rankings")
+        self.calc_ranking()
+        best_feed = max(enumerate(self.ranking), key=lambda x: x[1])[
+            0
+        ]  # find index of highest ranking
+        self.l.info(f"Best feed is feed{best_feed} with {self.ranking[best_feed]}")
+        self.l.info("Processing frame")
         best_widget: CameraWidget = self.camera_widgets[best_feed]
         best_frame = best_widget.frame
         if best_frame is None or self.ranking[best_feed] == 0:
             return best_frame
         boxes = best_widget.get_detection_bounds()
         if boxes == []:
-            self.l.warning('Boxes empty, continuing')
+            self.l.warning("Boxes empty, continuing")
         else:
             box = calculate_frame_box_static(boxes)
         if box is None:
@@ -127,7 +144,7 @@ class CvManager(object):
         try:
             while self.running:
                 if not self.sc.running():
-                    self.l.warning('Shutdown Detected exiting')
+                    self.l.warning("Shutdown Detected exiting")
                     break
                 self.update_debug_outputs()
                 cropped_frame = self.get_cropped_frame_from_best_feed()
@@ -142,7 +159,7 @@ class CvManager(object):
         exit()
 
     def start_image_show_no_threading(self):
-        self.l.passingblue('Starting CV ImageShow')
+        self.l.passingblue("Starting CV ImageShow")
         running = True
         # 'Start' outputs here for compatibility reasons
         for outputs in self.debug_outputs.values():
@@ -163,5 +180,5 @@ class CvManager(object):
         cam_widget: CameraWidget
         for cam_widget in self.camera_widgets:
             if cam_widget.stopped:
-                self.l.info(f'Starting Camera {cam_widget.port}')
+                self.l.info(f"Starting Camera {cam_widget.port}")
                 cam_widget.start()
