@@ -20,7 +20,6 @@ import numpy as np
 
 class CameraWidget:
     
-    widgets
     frame: np.ndarray
 
     def __init__(
