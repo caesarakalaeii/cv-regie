@@ -14,11 +14,11 @@ from shut_down_coordinator import Shutdown_Coordinator
 
 
 class DetectionWidget(ABC):
-    '''
+    """
     Absract class to generalize detection widgets
-    '''
+    """
 
-    widget_frame: np.ndarray | None
+    widget_frame: np.ndarray
     stopped: bool
     detection: bool
     widget_type = "Base"

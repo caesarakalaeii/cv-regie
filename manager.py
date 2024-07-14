@@ -5,25 +5,26 @@ from threading import Thread
 from logger import Logger
 from shut_down_coordinator import Shutdown_Coordinator
 
+
 class MODES:
     CV = 1
     VCAM = 2
 
 
-class CV_Manager(object):
-    
-    def __init__(self, camera_ports = None,
-                 output_mode = MODES.CV,
-                 database_path = None, 
-                 raw_resolution = (720, 1280),
-                 raw_fps = 30,
-                 target_resolution = (720, 1280),
+class CvManager(object):
+
+    def __init__(self, camera_ports=None,
+                 output_mode=MODES.CV,
+                 database_path=None,
+                 raw_resolution=(720, 1280),
+                 raw_fps=30,
+                 target_resolution=(720, 1280),
                  human_detection_path: str = None,
                  face_detection_path: str = None,
-                 debug:bool = False,
-                 l:Logger = Logger(),
+                 debug: bool = False,
+                 l: Logger = Logger(),
                  sc: Shutdown_Coordinator = Shutdown_Coordinator()
-                ) -> None:
+                 ) -> None:
         self.camera_widgets = []
         self.ranking = []
         self.debug = debug
@@ -32,33 +33,33 @@ class CV_Manager(object):
         self.sc = sc
         self.output_mode = output_mode
         l.passingblue('Creating Manager')
-        
+
         if debug:
             for cam in camera_ports:
                 self.debug_outputs[cam] = []
         l.passingblue(f'Creating CameraWidgets {camera_ports}')
         for cam in camera_ports:
-            camera = CameraWidget(cam, 
-                             raw_resolution, 
-                             raw_fps, 
-                             human_detection_path, 
-                             face_detection_path, 
-                             database_path,
-                             l, 
-                             self.sc
-                             )
+            camera = CameraWidget(cam,
+                                  raw_resolution,
+                                  raw_fps,
+                                  human_detection_path,
+                                  face_detection_path,
+                                  database_path,
+                                  l,
+                                  self.sc
+                                  )
             self.camera_widgets.append(
                 camera
             )
             if debug:
                 self.l.passing('Debug flag found, generating debug widgets')
                 self.debug_outputs[cam].append(
-                                                ImageShowWidget(f'Camera {cam} Raw',
-                                                                l,
-                                                                self.sc
-                                                                )
-                                               )
-                                
+                    ImageShowWidget(f'Camera {cam} Raw',
+                                    l,
+                                    self.sc
+                                    )
+                )
+
             self.ranking.append(0)
         self.l.info(self.debug_outputs)
         if output_mode == MODES.CV:
@@ -72,43 +73,43 @@ class CV_Manager(object):
             raise ValueError("Mode not recognized")
         self.thread = Thread(target=self.run)
         self.running = False
-        
+
     def start(self):
         self.l.passingblue("Starting manager")
-        
+
         if not self.running:
             self.running = True
             self.start_cam_widgets()
             self.start_debug_widgets()
-            
+
             self.output.start()
             self.thread.start()
-            
+
         self.l.passing('Finished Setting up Manager')
-        
+
     def start_debug_widgets(self):
         if self.debug:
-            debug:OutputWiget
+            debug: OutputWiget
             for debugs in self.debug_outputs.values():
                 for debug in debugs:
                     debug.start()
-    
+
     def update_debug_outputs(self):
         cam_widget: CameraWidget
         if self.debug:
             for i, cam_widget in enumerate(self.camera_widgets):
-                self.ranking[i]=cam_widget.get_ranking()
-                debug:OutputWiget
+                self.ranking[i] = cam_widget.get_ranking()
+                debug: OutputWiget
                 for debug in self.debug_outputs[cam_widget.port]:
                     debug.update_frame(cam_widget.annotate_frame())
-        
+
     def get_cropped_frame_from_best_feed(self):
         box = None
         self.l.info('Calculating rankings')
-        best_feed = max(enumerate(self.ranking),key=lambda x: x[1])[0] #find index of highest ranking
+        best_feed = max(enumerate(self.ranking), key=lambda x: x[1])[0]  #find index of highest ranking
         self.l.info(f'Best feed is feed{best_feed} with {self.ranking[best_feed]}')
         self.l.info('Processing frame')
-        best_widget:CameraWidget = self.camera_widgets[best_feed]
+        best_widget: CameraWidget = self.camera_widgets[best_feed]
         best_frame = best_widget.frame
         if best_frame is None or self.ranking[best_feed] == 0:
             return best_frame
@@ -121,7 +122,7 @@ class CV_Manager(object):
             return best_frame
         else:
             return get_processed_frame(box, best_widget.frame)
-    
+
     def run(self):
         try:
             while self.running:
@@ -130,7 +131,7 @@ class CV_Manager(object):
                     break
                 self.update_debug_outputs()
                 cropped_frame = self.get_cropped_frame_from_best_feed()
-                
+
                 self.output.update_frame(cropped_frame)
         except Exception as e:
             self.l.error(e.with_traceback(e.__traceback__))
@@ -139,8 +140,7 @@ class CV_Manager(object):
             raise e
         self.sc.stop()
         exit()
-            
-            
+
     def start_image_show_no_threading(self):
         self.l.passingblue('Starting CV ImageShow')
         running = True
@@ -155,11 +155,10 @@ class CV_Manager(object):
             for outputs in self.debug_outputs.values():
                 for output in outputs:
                     output.show_image()
-                    
+
             if self.output_mode == MODES.CV:
                 self.output.show_image()
-            
-                
+
     def start_cam_widgets(self):
         cam_widget: CameraWidget
         for cam_widget in self.camera_widgets:
