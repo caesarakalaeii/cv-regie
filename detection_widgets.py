@@ -5,7 +5,12 @@ from ultralytics import YOLO
 from deepface import DeepFace
 import numpy as np
 from threading import Thread
-from utilities import Box, identity_from_string, os_sensitive_backslashes, plot_bounding_boxes
+from utilities import (
+    Box,
+    identity_from_string,
+    os_sensitive_backslashes,
+    plot_bounding_boxes,
+)
 from logger import Logger
 from output_widgets import ImageShowWidget
 import cv2 as cv
@@ -33,17 +38,19 @@ class DetectionWidget(ABC):
     def stop(self):
         self.stopped = True
         self.sc.stop()
-        self.l.warning(f'Stopping {self.widget_type}')
+        self.l.warning(f"Stopping {self.widget_type}")
         exit()
 
     def count_ids(self):
-        raise NotImplementedError()
+        return 0
 
     def get_result_data(self):
         raise NotImplementedError()
 
-    def update_frame(self, frame):
-        self.widget_frame = frame
+    def update_frame(self, frame: np.ndarray):
+        if frame is None:
+            return
+        self.widget_frame = frame.copy()
         self.frame_count += 1
 
     def plot_results(self, frame=None) -> np.ndarray:
@@ -56,7 +63,7 @@ class DetectionWidget(ABC):
 
     def running(self):
         if not self.sc.running():
-            self.l.warning('Shutdown Detected exiting')
+            self.l.warning("Shutdown Detected exiting")
             self.stop()
         return not self.stopped
 
@@ -64,10 +71,13 @@ class DetectionWidget(ABC):
 class HumanWidget(DetectionWidget):
     widget_type = "Human"
 
-    def __init__(self, human_detection_path: str,
-                 l=Logger(),
-                 sc=Shutdown_Coordinator(),
-                 detection_frequency=10):
+    def __init__(
+        self,
+        human_detection_path: str,
+        l=Logger(),
+        sc=Shutdown_Coordinator(),
+        detection_frequency=10,
+    ):
 
         self.detection_frequency = detection_frequency
         self.sc = sc
@@ -76,7 +86,7 @@ class HumanWidget(DetectionWidget):
         self.human_detection_score = 0
         self.human_detection_data = [[], [], [], [], []]
         self.l = l
-        self.l.info('Creating HumanWidget')
+        self.l.info("Creating HumanWidget")
 
         self.model = YOLO(human_detection_path)
         self.result = None
@@ -89,7 +99,7 @@ class HumanWidget(DetectionWidget):
 
     def start(self):
         if self.stopped:
-            self.l.info('Starting HumanWidget')
+            self.l.info("Starting HumanWidget")
             self.stopped = False
             self.thread = Thread(target=self.run)
             self.thread.start()
@@ -99,7 +109,9 @@ class HumanWidget(DetectionWidget):
             while self.running():
                 if self.widget_frame is None:
                     continue
-                if self.frame_count % self.detection_frequency == 0:  # only run detection every 10th frame yourself
+                if (
+                    self.frame_count % self.detection_frequency == 0
+                ):  # only run detection every 10th frame yourself
                     self.run_detection()
         except Exception as e:
             self.l.error(e.with_traceback(e.__traceback__))
@@ -117,7 +129,7 @@ class HumanWidget(DetectionWidget):
             )
             self.widget_frame = None
         except AttributeError as e:
-            self.l.warning(f'Detection failed, continuing: {e}')
+            self.l.warning(f"Detection failed, continuing: {e}")
 
     def count_ids(self):
         counts = 0
@@ -158,10 +170,13 @@ class FaceWidget(DetectionWidget):
     widget_type = "Face"
     widget_frame: np.ndarray
 
-    def __init__(self, face_detection_path: str,
-                 l=Logger(),
-                 sc=Shutdown_Coordinator(),
-                 detection_frequency=10):
+    def __init__(
+        self,
+        face_detection_path: str,
+        l=Logger(),
+        sc=Shutdown_Coordinator(),
+        detection_frequency=10,
+    ):
         self.detection = False
         self.face_detection_path = face_detection_path
         self.face_detection_score = 0
@@ -169,7 +184,7 @@ class FaceWidget(DetectionWidget):
         self.sc = sc
         self.l = l
         self.detection_frequency = detection_frequency
-        self.l.info('Creating FaceWidget')
+        self.l.info("Creating FaceWidget")
         self.result = None
         self.frame_count = 0
         self.model = YOLO(face_detection_path)
@@ -182,7 +197,7 @@ class FaceWidget(DetectionWidget):
 
     def start(self):
         if self.stopped:
-            self.l.info('Starting FaceWidget')
+            self.l.info("Starting FaceWidget")
             self.stopped = False
             self.thread = Thread(target=self.run)
             self.thread.start()
@@ -192,7 +207,9 @@ class FaceWidget(DetectionWidget):
             while self.running():
                 if self.widget_frame is None:
                     continue
-                if self.frame_count % self.detection_frequency == 0:  # only run detection every 10th frame yourself
+                if (
+                    self.frame_count % self.detection_frequency == 0
+                ):  # only run detection every 10th frame yourself
                     self.run_detection()
         except Exception as e:
             self.l.error(e.with_traceback(e.__traceback__))
@@ -211,7 +228,7 @@ class FaceWidget(DetectionWidget):
             self.widget_frame = None
 
         except AttributeError as e:
-            self.l.warning(f'Detection failed, continuing: {e}')
+            self.l.warning(f"Detection failed, continuing: {e}")
 
     def count_ids(self):
         counts = 0
@@ -249,10 +266,13 @@ class DeepFaceWidget(DetectionWidget):
     widget_type = "DeepFace"
     widget_frame: np.ndarray
 
-    def __init__(self, database_path: str,
-                 l=Logger(),
-                 sc=Shutdown_Coordinator(),
-                 detection_frequency=10):
+    def __init__(
+        self,
+        database_path: str,
+        l=Logger(),
+        sc=Shutdown_Coordinator(),
+        detection_frequency=10,
+    ):
 
         self.database_path = database_path
         self.sc = sc
@@ -261,7 +281,7 @@ class DeepFaceWidget(DetectionWidget):
         self.frame_count = 0
         self.detection_frequency = detection_frequency
         self.l = l
-        self.l.info('Creating DeepFaceWidget')
+        self.l.info("Creating DeepFaceWidget")
 
         self.widget_frame = None
 
@@ -270,7 +290,7 @@ class DeepFaceWidget(DetectionWidget):
 
     def start(self):
         if self.stopped:
-            self.l.info('Starting DeepFaceWidget')
+            self.l.info("Starting DeepFaceWidget")
             self.stopped = False
             self.thread = Thread(target=self.run)
             self.thread.start()
@@ -280,7 +300,9 @@ class DeepFaceWidget(DetectionWidget):
             while self.running():
                 if self.widget_frame is None:
                     continue
-                if self.frame_count % self.detection_frequency == 0:  # only run detection every 10th frame yourself
+                if (
+                    self.frame_count % self.detection_frequency == 0
+                ):  # only run detection every 10th frame yourself
                     self.run_detection()
         except Exception as e:
             self.l.error(e.with_traceback(e.__traceback__))
@@ -311,15 +333,15 @@ class DeepFaceWidget(DetectionWidget):
                 enforce_detection=False,
                 silent=True,
                 detector_backend="yolov8",
-                distance_metric="euclidean_l2"
+                distance_metric="euclidean_l2",
             )
             self.widget_frame = None
 
         except AttributeError as e:
-            self.l.warning(f'Detection failed, continuing: {e}')
+            self.l.warning(f"Detection failed, continuing: {e}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     l = Logger(True)
     l.passingblue("Starting Minimum example, only used for debugging purposes")
@@ -335,14 +357,16 @@ if __name__ == '__main__':
 
     for i, port in enumerate(ports):
         l.passing("Creating VidCaps")
-        if os.name == 'nt':
+        if os.name == "nt":
             captures.append(cv.VideoCapture(port, cv.CAP_DSHOW))
         else:
             captures.append(cv.VideoCapture(port))
 
-        #Change this to test for different widgets
+        # Change this to test for different widgets
         widet_to_test = HumanWidget(human_detection_path, l)
-        outputs.append(ImageShowWidget(f'Detection {widet_to_test.widget_type} Port {port}'))
+        outputs.append(
+            ImageShowWidget(f"Detection {widet_to_test.widget_type} Port {port}")
+        )
         min_ex.append(widet_to_test)
         min_ex[i].start()
         outputs[i].start()
@@ -365,7 +389,7 @@ if __name__ == '__main__':
                 else:
                     l.warning("No frame returned")
     except (KeyboardInterrupt, Exception) as e:
-        l.error(f'{e}\nStopping widgets')
+        l.error(f"{e}\nStopping widgets")
         for widget in min_ex:
             widget.stop()
         exit()

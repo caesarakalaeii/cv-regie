@@ -12,8 +12,10 @@ class OutputWiget(ABC):
     frame: np.ndarray
     sc: Shutdown_Coordinator
 
-    def update_frame(self, frame):
-        self.frame = frame
+    def update_frame(self, frame: np.ndarray):
+        if frame is None:
+            return
+        self.frame = frame.copy()
 
     def start(self):
         raise NotImplementedError()
@@ -113,10 +115,12 @@ class VirtualWebcamShowWidget(OutputWiget):
             self.backend = 'v4l2loopback'
         self.frame = None
 
-    def update_frame(self, frame):
+    def update_frame(self, frame: np.ndarray):
+        if frame is None:
+            return
         if self.convert:
             frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
-        self.frame = frame
+        self.frame = frame.copy()
 
     def start(self):
         self.stopped = False

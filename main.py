@@ -8,11 +8,11 @@ from shut_down_coordinator import Shutdown_Coordinator
 from utilities import os_sensitive_backslashes, ensure_dir_exists
 from logger import Logger
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ports = [0]
     resolution = [720, 1280]
-    camera_fps = 30
-    debug = True
+    camera_fps = 20
+    debug = False
     mode = MODES.CV
 
     human_detection_path = os_sensitive_backslashes("models/detection/yolov8n.pt")
@@ -32,7 +32,7 @@ if __name__ == '__main__':
         face_detection_path,
         debug=debug,
         l=l,
-        sc=sc
+        sc=sc,
     )
     manager.start()
     manager.start_image_show_no_threading()
