@@ -1,14 +1,18 @@
-"""
-    This Program is used to ease the solo content creation of creators in workshop enviroments.
-    Authored by Malte and Kilian
-"""
+
+
+import multiprocessing
+
+if __name__ == "__main__":
+    multiprocessing.set_start_method('spawn')  # Set before any possible imports that use multiprocessing
 
 from manager import CvManager, MODES
 from shut_down_coordinator import Shutdown_Coordinator
 from utilities import os_sensitive_backslashes, ensure_dir_exists
 from logger import Logger
+from multiprocessing import Process
 
-if __name__ == "__main__":
+
+def run_manager():
     ports = [0]
     resolution = [720, 1280]
     camera_fps = 20
@@ -35,4 +39,8 @@ if __name__ == "__main__":
         sc=sc,
     )
     manager.start()
-    manager.start_image_show_no_threading()
+
+if __name__ == "__main__":
+    p = Process(target=run_manager)
+    p.start()
+    p.join()

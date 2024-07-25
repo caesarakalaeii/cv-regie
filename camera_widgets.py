@@ -13,7 +13,7 @@ from utilities import (
     os_sensitive_backslashes,
 )
 from detection_widgets import HumanWidget, DeepFaceWidget, FaceWidget, DetectionWidget
-from threading import Thread
+from multiprocessing import Process
 import cv2 as cv
 from logger import Logger
 from timeit import default_timer as timer
@@ -52,15 +52,15 @@ class CameraWidget:
         self.cap.set(cv.CAP_PROP_FPS, self.camera_fps)
 
         self.grabbed = False
-        self.thread = Thread(target=self.run)
         self.stopped = True
+        self.process = None
 
     def start(self):
         if self.stopped:
             self.l.passing(f"Starting CameraWidget {self.port}")
             self.stopped = False
-            self.thread = Thread(target=self.run)
-            self.thread.start()
+            self.process = Process(target=self.run)
+            self.process.start()
 
     def run(self):
         time_start = timer()
@@ -86,13 +86,12 @@ class CameraWidget:
             raise e
 
     def stop(self):
-        widget: DetectionWidget
         self.stopped = True
         self.l.warning(f"Stopping CameraWidget {self.port}")
         self.sc.stop()
         self.cap.release()
-        exit()
-
+        if self.process is not None:
+            self.process.terminate()
 
 if __name__ == "__main__":
 

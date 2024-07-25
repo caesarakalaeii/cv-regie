@@ -9,9 +9,11 @@ from datetime import time
 import cv2 as cv
 import numpy as np
 from logger import Logger
+from multiprocessing import Lock, Manager
 
-counts = {}
 
+manager = Manager()
+counts = manager.dict()
 
 def timing(func):
     global counts
@@ -22,11 +24,11 @@ def timing(func):
         result = func(*args, **kwargs)
         time_elapsed = tm.time() - start
         print(f"Function {func.__name__} took {time_elapsed * 1000} ms")
-        counts[func.__name__] = counts.get(func.__name__, 0) + 1
+        with Lock():
+            counts[func.__name__] = counts.get(func.__name__, 0) + 1
         return result
 
     return wrapper
-
 
 class Box:
     x1: int
@@ -57,18 +59,15 @@ class Box:
     def cut_out(self, frame: np.ndarray) -> np.ndarray:
         return frame[self.y1: self.y2, self.x1: self.x2]
 
-
 def plot_bounding_boxes(frame: np.ndarray, boxes) -> np.ndarray:
     for box in boxes:
         cv.rectangle(frame, (box.x1, box.y1), (box.x2, box.y2), (0, 255, 0), 2)
     return frame
 
-
 def identity_from_string(string: str):
     if os.name == "nt":
         return string.split("database\\")[1].split("\\")[0]
     return string.split("database/")[1].split("/")[0]
-
 
 def os_sensitive_backslashes(string: str):
     if os.name == "nt":
@@ -76,6 +75,26 @@ def os_sensitive_backslashes(string: str):
         return string.replace("/", "\\")
     print(f"Detected Unix System, attempting conversion from path {string}")
     return string.replace("\\", "/")
+
+
+def calculate_ranking(frame_shape, person_count, face_count, max_res=(720, 1280)) -> int:
+    ranking = face_count * 3
+    ranking += person_count * 2
+    ranking += frame_shape[0] / max_res[0] + frame_shape[1] / max_res[1]
+    return ranking
+
+def ensure_dir_exists(directory):
+    """
+    Check if a given directory exists, and if not, creates it.
+    """
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+        print(f"Directory '{directory}' created.")
+    else:
+        print(f"Directory '{directory}' already exists.")
+
+
+
 
 
 @timing
@@ -111,30 +130,7 @@ def pad_to_target_shape(box: Box, target_shape=(16, 9)) -> Box:
     return Box(int(new_x1), int(new_y1), int(new_x2), int(new_y2))
 
 
-def calculate_ranking(
-        frame_shape, person_count, face_count, max_res=(720, 1280)
-) -> int:
-    ranking = face_count * 3
 
-    ranking += person_count * 2
-
-    ranking += frame_shape[0] / max_res[0] + frame_shape[1] / max_res[1]
-
-    return ranking
-
-
-def ensure_dir_exists(directory):
-    """
-    Check if a given directory exists, and if not, creates it.
-
-    Args:
-        directory (str): The path of the directory to check/create.
-    """
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-        print(f"Directory '{directory}' created.")
-    else:
-        print(f"Directory '{directory}' already exists.")
 
 
 @timing
@@ -210,6 +206,21 @@ def list_ports(port_range: int, l: Logger):
                 available_ports.append(dev_port)
         dev_port += 1
     return available_ports, working_ports
+
+"""
+Module comprised of utility functions, mainly meant for static methods that provide rudimentary functions
+"""
+
+
+
+
+
+if __name__ == "__main__":
+    l = Logger(True)
+    port_range = 10
+    l.warning("Starting search for open Ports \nThis might take a while!")
+    available_ports, working_ports = list_ports(port_range, l)
+    l.passingblue(f"Found Ports: {available_ports}\nWorking Ports are: {working_ports}")
 
 
 if __name__ == "__main__":
