@@ -18,13 +18,16 @@ class OutputWiget(ABC):
         self.frame = frame.copy()
 
     def start(self):
-        raise NotImplementedError()
+        raise NotImplementedError(f'Class {self.__class__.__name__} does not implement start method')
 
     def stop(self):
-        raise NotImplementedError()
+        raise NotImplementedError(f'Class {self.__class__} should not be stopped.')
 
     def loop(self):
-        raise NotImplementedError()
+        raise NotImplementedError(f'Class {self.__class__.__name__} does not implement loop')
+
+    def show_image(self):
+        raise NotImplementedError(f'Class {self.__class__.__name__} does not support direct image access')
 
 
 class ImageShowWidget(OutputWiget):
@@ -154,6 +157,8 @@ class VirtualWebcamShowWidget(OutputWiget):
         self.l.warning('Stopping Output Widget')
         self.stopped = True
         self.sc.stop()
+
+
 
 
 if __name__ == '__main__':

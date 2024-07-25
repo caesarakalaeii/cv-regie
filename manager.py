@@ -150,6 +150,7 @@ class CvManager(object):
     def get_detection_bounds(self, cam_index: int):
         return self.detection_widgets[cam_index][0].get_result_data()
 
+    @timing
     def annotate_frame(self, cam_index: int) -> np.ndarray:
         cam = self.get_cam_by_port(cam_index)
         if cam is None:
