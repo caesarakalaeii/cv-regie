@@ -1,38 +1,33 @@
+# -*- coding: utf-8 -*-
 """
-    This Program is used to ease the solo content creation of creators in workshop enviroments.
-    Authored by Malte and Kilian
+Created on Mon Jul 29 08:51:32 2024
+
+@author: Wittke
 """
 
-from manager import CvManager, MODES
-from shut_down_coordinator import Shutdown_Coordinator
-from utilities import os_sensitive_backslashes, ensure_dir_exists
-from logger import Logger
+from thread.leadThread import LeadWidget
 
 if __name__ == "__main__":
-    ports = [0]
-    resolution = [720, 1280]
-    camera_fps = 20
-    debug = False
-    mode = MODES.CV
+    ports = [0, 1]
+    resolution = [360, 640]
+    camera_fps = 30
+    skipped_frames = [2, 10] #[yolo,deepface]
+    director_fartique = 3 #secounds between bestFrame shifts
+    verbose = True #shows fps
+    picturesque = 2 # 1 -> camera frame, 2 -> + yolo frame
 
-    human_detection_path = os_sensitive_backslashes("models/detection/yolov8n.pt")
-    face_detection_path = os_sensitive_backslashes("models/face/yolov8n-face.pt")
-    database_path = os_sensitive_backslashes("database")
-    ensure_dir_exists(database_path)
-    l = Logger(True)
-    sc = Shutdown_Coordinator(l)
-    manager = CvManager(
+    pose_detection_path = "model/pose/yolov8n-pose.pt"
+    database_path = "./database"
+
+    imageShow = LeadWidget(
         ports,
-        mode,
-        database_path,
         resolution,
         camera_fps,
-        resolution,
-        human_detection_path,
-        face_detection_path,
-        debug=debug,
-        l=l,
-        sc=sc,
+        skipped_frames,
+        director_fartique,
+        pose_detection_path,
+        database_path,
+        verbose,
+        picturesque
     )
-    manager.start()
-    manager.start_image_show_no_threading()
+    imageShow.start()
