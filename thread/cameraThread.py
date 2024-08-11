@@ -168,7 +168,10 @@ class YoloWidget:
                     tracker="bytetrack.yaml",
                     imgsz=320,
                     classes=[0],
-                    verbose=False,
+                    verbose=False, 
+                    conf = 0.5,
+                    # half = True,
+                    
                 )
 
                 self.pose_detection_score = self.countIDs(result)
