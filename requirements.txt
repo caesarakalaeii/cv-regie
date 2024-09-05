@@ -2,7 +2,6 @@ requests
 numpy
 opencv-python
 lap
-lapx
 ultralytics
 tf-keras
 pyvirtualcam

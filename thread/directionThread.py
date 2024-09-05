@@ -11,7 +11,7 @@ import numpy as np
 
 from threading import Thread
 
-from thread.cameraThread import Frame
+from utils import Frame
 
 
 class DirectionWidget:
@@ -20,12 +20,12 @@ class DirectionWidget:
     def __init__(
             self,
             frameObjects: [..., Frame],
-            director_fartique: int,
+            director_fatigue: int,
             scoreFunction: [..., int] = [1, 2, 3]
             ):
 
         self.frameObjects = frameObjects
-        self.director_fartique = director_fartique
+        self.director_fatigue = director_fatigue
         self.scoreFunction = scoreFunction
         self.bestPort = None
         self.bestIndex = None
@@ -39,7 +39,7 @@ class DirectionWidget:
 
     def run(self):
         while not self.stopped:
-            time.sleep(self.director_fartique)
+            time.sleep(self.director_fatigue)
             score = np.array([0])
             for i, frameObject in enumerate(self.frameObjects):
                 frameScore = self.calculateFrameScore(frameObject)

@@ -9,6 +9,9 @@ import cv2 as cv
 
 from thread.cameraThread import CameraWidget
 from thread.directionThread import DirectionWidget
+from utils import calculate_frame_box_static, get_processed_frame, Frame
+
+
 
 class LeadWidget:
     "Main widget to show all camera feeds"
@@ -19,18 +22,19 @@ class LeadWidget:
         resolution: [int, int],
         camera_fps: int,
         skipped_frames: [int, int],
-        director_fartique: int,
+        director_fatigue: int,
         pose_detection_path: str,
         database_path: str,
         verbose: bool = True,
         picturesque: int = 0
     ):
 
+        self.stopped = False
         self.ports = ports
         self.resolution = resolution
         self.camera_fps = camera_fps
         self.skipped_frames = skipped_frames
-        self.director_fartique = director_fartique
+        self.director_fatigue = director_fatigue
 
         self.pose_detection_path = pose_detection_path
         self.database_path = database_path
@@ -59,7 +63,7 @@ class LeadWidget:
             self.frameObjects.append(widget.frameObject)
 
         self.directionWidget = DirectionWidget(self.frameObjects,
-                                               self.director_fartique)
+                                               self.director_fatigue)
         self.directionWidget.start()
 
         self.run()
@@ -79,7 +83,14 @@ class LeadWidget:
                     print(f"Port:{widget.port} - fps:{widget.frameObject.fps}")
 
             if self.directionWidget.bestIndex is not None:
-               cv.imshow(f"Best frame", self.cameraWidgets[self.directionWidget.bestIndex].frameObject.frame)
+                bestFrame: Frame = self.cameraWidgets[self.directionWidget.bestIndex].frameObject
+                frameToShow = bestFrame.frame
+                if len(bestFrame.boxes) > 0:
+                    croppedFrameBox = calculate_frame_box_static(bestFrame.boxes)
+                    if croppedFrameBox.x2 != 0 and croppedFrameBox.y2 != 0:
+                        frameToShow = get_processed_frame(croppedFrameBox, bestFrame.frame)
+                cv.imshow("Best frame", frameToShow)
+
 
             if cv.waitKey(1) == ord("q"):
                 self.stop()

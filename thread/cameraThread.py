@@ -4,6 +4,7 @@ Created on Mon Jul 29 12:39:35 2024
 
 @author: Wittke
 """
+import os
 
 import numpy as np
 import cv2 as cv
@@ -12,18 +13,9 @@ from threading import Thread
 from ultralytics import YOLO
 from deepface import DeepFace
 from timeit import default_timer as timer
+from utils import Box, get_processed_frame, Frame
 
 
-class Frame:
-
-    def __init__(self):
-
-        self.frame = None
-        self.yoloFrame = None
-        self.fps = 0
-        self.pose_detection_score = 0
-        self.face_detection_score = 0
-        self.identification_detection_score = 0
 
 
 class CameraWidget:
@@ -38,6 +30,7 @@ class CameraWidget:
         database_path,
     ):
 
+        self.frame = None
         self.port = port
         self.resolution = resolution
         self.camera_fps = camera_fps
@@ -63,7 +56,11 @@ class CameraWidget:
 
         self.frame_counter = 0
 
-        self.cap = cv.VideoCapture(self.port)
+        if os.name == 'nt':
+            self.cap = cv.VideoCapture(port, cv.CAP_DSHOW)
+        else:
+            self.cap = cv.VideoCapture(port)
+
         self.cap.set(cv.CAP_PROP_FRAME_WIDTH, self.resolution[1])
         self.cap.set(cv.CAP_PROP_FRAME_HEIGHT, self.resolution[0])
         self.cap.set(cv.CAP_PROP_FPS, self.camera_fps)
@@ -114,7 +111,7 @@ class CameraWidget:
 
                 self.frameObject.pose_detection_score = (self.pose_detection_keypoints.size)/2
                 self.frameObject.face_detection_score = (self.pose_detection_keypoints.size - np.count_nonzero(self.pose_detection_keypoints))/2
-                self.frameObject.identification_detection_score = len(np.where(self.identity_data[:, 0] == -1))
+                self.frameObject.identification_detection_score = len(np.nonzero(self.identity_data[:, 0] == -1))
 
                 self.grabbed, self.frameObject.frame = self.cap.read()
                 counter += 1
@@ -174,6 +171,13 @@ class YoloWidget:
                     
                 )
 
+                data = []
+                if result[0].boxes.id is not None:
+                    for i, identity in enumerate(result[0].boxes.id):
+                        x1, y1, x2, y2 = result[0].boxes.xyxy[i]
+                        data.append(Box(x1, y1, x2, y2))
+
+                self.widget.frameObject.boxes = data
                 self.pose_detection_score = self.countIDs(result)
 
                 self.pose_detection_data, self.pose_detection_keypoints = (

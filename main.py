@@ -9,10 +9,10 @@ from thread.leadThread import LeadWidget
 
 if __name__ == "__main__":
     ports = [0, 1]
-    resolution = [360, 640]
+    resolution = [720, 1280]
     camera_fps = 30
     skipped_frames = [2, 10] #[yolo,deepface]
-    director_fartique = 3 #secounds between bestFrame shifts
+    director_fatigue = 3 #secounds between bestFrame shifts
     verbose = True #shows fps
     picturesque = 2 # 1 -> camera frame, 2 -> + yolo frame
 
@@ -24,7 +24,7 @@ if __name__ == "__main__":
         resolution,
         camera_fps,
         skipped_frames,
-        director_fartique,
+        director_fatigue,
         pose_detection_path,
         database_path,
         verbose,
