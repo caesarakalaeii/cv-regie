@@ -224,7 +224,7 @@ def list_ports(port_range: int):
 
 
 if __name__ == "__main__":
-    port_range = 10
+    port_range = 1
 
     print("Starting search for open Ports \nThis might take a while!")
     available_ports, working_ports = list_ports(port_range)

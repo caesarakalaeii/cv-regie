@@ -8,12 +8,12 @@ Created on Mon Jul 29 08:51:32 2024
 from thread.leadThread import LeadWidget
 
 if __name__ == "__main__":
-    ports = [0, 1]
+    ports = [0,1]
     resolution = [720, 1280]
     camera_fps = 30
     skipped_frames = [2, 10] #[yolo,deepface]
     director_fatigue = 3 #secounds between bestFrame shifts
-    verbose = True #shows fps
+    verbose = False #shows fps
     picturesque = 2 # 1 -> camera frame, 2 -> + yolo frame
 
     pose_detection_path = "model/pose/yolov8n-pose.pt"

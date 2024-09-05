@@ -176,8 +176,8 @@ class YoloWidget:
                     for i, identity in enumerate(result[0].boxes.id):
                         x1, y1, x2, y2 = result[0].boxes.xyxy[i]
                         data.append(Box(x1, y1, x2, y2))
-
                 self.widget.frameObject.boxes = data
+                    
                 self.pose_detection_score = self.countIDs(result)
 
                 self.pose_detection_data, self.pose_detection_keypoints = (

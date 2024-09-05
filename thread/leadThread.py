@@ -83,6 +83,9 @@ class LeadWidget:
                     print(f"Port:{widget.port} - fps:{widget.frameObject.fps}")
 
             if self.directionWidget.bestIndex is not None:
+                print(f'Cam index: {self.directionWidget.bestIndex}')
+                for i, frameObject in enumerate(self.directionWidget.frameObjects):
+                    cv.imshow(f'Image at index {i}',frameObject.frame)
                 bestFrame: Frame = self.cameraWidgets[self.directionWidget.bestIndex].frameObject
                 frameToShow = bestFrame.frame
                 if len(bestFrame.boxes) > 0:
