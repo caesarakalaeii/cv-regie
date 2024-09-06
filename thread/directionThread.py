@@ -47,7 +47,7 @@ class DirectionWidget:
                     score = np.array([frameScore])
                 else:
                     score = np.append(score, [frameScore])
-            score = score[::-1] # TODO: Fix this properly, as this only works for two cams atm
+            #score = score[::-1] # TODO: Fix this properly, as this only works for two cams atm
             self.bestIndex = np.argmax(score)
             print(f'Best Index {self.bestIndex}')
 

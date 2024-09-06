@@ -94,8 +94,8 @@ class CameraWidget:
 
                 self.identity_data = np.copy(self.pose_detection_data)
                 self.identity_data[:, 0] = -1
-
                 for identity in self.deepface_detections_data:
+                    
                     center = identity[1:]
                     euclid_norm = np.sum(
                         np.sqrt(
@@ -107,12 +107,15 @@ class CameraWidget:
                         axis=1,
                     )
                     min_idx = np.argmin(euclid_norm)
-                    self.identity_data[min_idx][0] = identity[0]
+                    
+                    if identity[1] == 0 and identity[2] == 0:
+                        self.identity_data[min_idx][0] = -1
+                    else:
+                        self.identity_data[min_idx][0] = identity[0]
 
-                self.frameObject.pose_detection_score = (self.pose_detection_keypoints.size)/2
-                self.frameObject.face_detection_score = (self.pose_detection_keypoints.size - np.count_nonzero(self.pose_detection_keypoints))/2
-                self.frameObject.identification_detection_score = len(np.nonzero(self.identity_data[:, 0] == -1))
-
+                #self.frameObject.pose_detection_score = (self.pose_detection_keypoints.size)/2 #Would be 3 every time - bullshit
+                self.frameObject.face_detection_score = (np.count_nonzero(self.pose_detection_keypoints))/2
+                self.frameObject.identification_detection_score = len(self.identity_data) - len(self.identity_data[np.nonzero(self.identity_data[:, 0] == -1)])
                 self.grabbed, self.frameObject.frame = self.cap.read()
                 counter += 1
                 self.frame_counter += 1
