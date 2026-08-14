@@ -22,8 +22,10 @@
     #
     # `self` is not decoration: it is the only way a wrapper in the store can
     # name this repo's own files, which is what anchors every verb (see
-    # rootPreamble). It does mean the wrappers rebuild whenever a tracked file
-    # changes -- five shellcheck runs, about a second, and worth it.
+    # rootPreamble). It does mean the four verb wrappers rebuild whenever a
+    # tracked file changes -- measured at 2.4 s for all four including their
+    # shellcheck runs, and worth it. dev-help does not reference the source, so
+    # it is not rebuilt.
     { self, nixpkgs, ... }:
     let
       lib = nixpkgs.lib;
