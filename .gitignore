@@ -163,3 +163,8 @@ cython_debug/
 *.pt
 *database*
 *.png
+
+# Nix
+result
+result-*
+.direnv/
